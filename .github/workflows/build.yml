@@ -53,8 +53,12 @@ jobs:
         run: flutter pub get
         working-directory: flutter_app
 
+      - name: Install CocoaPods dependencies
+        run: pod install --repo-update
+        working-directory: flutter_app/ios
+
       - name: Build IPA (no codesign)
-        run: flutter build ipa --no-codesign
+        run: flutter build ipa --no-codesign --verbose
         working-directory: flutter_app
 
       - name: Rename IPA

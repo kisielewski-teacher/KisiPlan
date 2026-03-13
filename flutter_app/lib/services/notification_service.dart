@@ -1,5 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:kisiplan/models/lesson.dart';
 
 class NotificationService {
@@ -17,7 +20,7 @@ class NotificationService {
   static const _idBreakEnding = 1003;
   static const _idEndOfDay = 1004;
   static const _idMorning = 1005;
-  static const _idDuty = 1006;
+  static const _idDutyBase = 2000;
 
   // Ile minut przed lekcją wysłać powiadomienie o końcu przerwy
   static const _breakEndingMinutes = 3;
@@ -40,12 +43,17 @@ class NotificationService {
 
   String _formatDutyBody(Lesson duty) {
     final location = duty.room.trim();
-    final locationText = location.isEmpty ? 'Sprawdź miejsce dyżuru w planie.' : 'Idź na dyżur: $location.';
+    final locationText =
+        location.isEmpty ? 'Sprawdź miejsce dyżuru w planie.' : 'Idź na dyżur: $location.';
     return '$locationText Dyżur trwa ${duty.startString}-${duty.endString}.';
   }
 
   Future<void> init() async {
     if (_initialized) return;
+
+    tz.initializeTimeZones();
+    final tzInfo = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
@@ -65,13 +73,74 @@ class NotificationService {
     _initialized = true;
   }
 
+  /// Planuje powiadomienia o dyżurach na cały tydzień.
+  /// Wywołaj po załadowaniu tygodniowego planu.
+  Future<void> scheduleWeekDutyNotifications(
+      Map<String, List<Lesson>> weekTimetable) async {
+    if (!_initialized) await init();
+
+    // Anuluj poprzednio zaplanowane powiadomienia o dyżurach
+    final pending = await _plugin.pendingNotificationRequests();
+    for (final n in pending) {
+      if (n.id >= _idDutyBase && n.id < _idDutyBase + 10000) {
+        await _plugin.cancel(n.id);
+      }
+    }
+
+    final now = DateTime.now();
+    // Wyznacz datę poniedziałku bieżącego tygodnia
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+
+    const dayOffset = {
+      'monday': 0,
+      'tuesday': 1,
+      'wednesday': 2,
+      'thursday': 3,
+      'friday': 4,
+    };
+
+    for (final entry in weekTimetable.entries) {
+      final offset = dayOffset[entry.key];
+      if (offset == null) continue;
+
+      final dayDate = monday.add(Duration(days: offset));
+
+      for (final lesson in entry.value.where((l) => l.isDuty)) {
+        final scheduledAt = tz.TZDateTime(
+          tz.local,
+          dayDate.year,
+          dayDate.month,
+          dayDate.day,
+          lesson.start.hour,
+          lesson.start.minute,
+        );
+
+        // Nie planuj powiadomień w przeszłości
+        if (scheduledAt.isBefore(tz.TZDateTime.now(tz.local))) continue;
+
+        final id = _idDutyBase +
+            ((entry.key + lesson.startString + lesson.room).hashCode &
+                0x1FFF);
+
+        await _plugin.zonedSchedule(
+          id,
+          'Zaczyna się dyżur',
+          _formatDutyBody(lesson),
+          scheduledAt,
+          _notifDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      }
+    }
+  }
+
   /// Sprawdza aktualny stan i wysyła odpowiednie powiadomienie.
   /// Wywoływana co minutę z timera.
   Future<void> checkAndNotify(List<Lesson> lessons) async {
     if (lessons.isEmpty) return;
-    if (!_initialized) {
-      await init();
-    }
+    if (!_initialized) await init();
 
     final now = DateTime.now();
     final nowMinutes = now.hour * 60 + now.minute;
@@ -119,31 +188,10 @@ class NotificationService {
       return;
     }
 
-    for (final lesson in lessons.where((lesson) => lesson.isDuty)) {
-      if (nowMinutes != lesson.startMinutes) {
-        continue;
-      }
-
-      final key = 'duty_${dateKey}_${lesson.startString}_${lesson.room}_${lesson.subject}';
-      if (prefs.getString(key) != null) {
-        continue;
-      }
-
-      await _plugin.show(
-        _notificationIdFor(key, _idDuty),
-        'Zaczyna się dyżur',
-        _formatDutyBody(lesson),
-        _notifDetails,
-      );
-      await prefs.setString(key, '1');
-    }
-
     // --- PRZED KAŻDĄ LEKCJĄ (koniec przerwy) ---
-    // Szukamy następnej lekcji gdy jesteśmy w przerwie
     Lesson? nextLesson;
     for (int i = 0; i < lessons.length; i++) {
       final l = lessons[i];
-      // Jesteśmy w przerwie między l a l+1
       if (nowMinutes >= l.endMinutes &&
           i + 1 < lessons.length &&
           nowMinutes < lessons[i + 1].startMinutes) {
@@ -160,7 +208,10 @@ class NotificationService {
           await _plugin.show(
             _notificationIdFor(key, _idBreakEnding),
             'Przerwa za $diff min się kończy!',
-            'Następna lekcja: ${nextLesson.subject} w sali ${nextLesson.room} (${nextLesson.startString}).',
+            'Następna lekcja: ${nextLesson.subject}'
+                '${nextLesson.room.isNotEmpty ? " · sala ${nextLesson.room}" : ""}'
+                '${nextLesson.className.isNotEmpty ? " · ${nextLesson.className}" : ""}'
+                ' (${nextLesson.startString}).',
             _notifDetails,
           );
           await prefs.setString(key, '1');
@@ -172,9 +223,7 @@ class NotificationService {
   /// Powiadomienie przy pierwszym załadowaniu planu (gdy lekcja za chwilę).
   Future<void> notifyIfLessonStartsSoon(List<Lesson> lessons) async {
     if (lessons.isEmpty) return;
-    if (!_initialized) {
-      await init();
-    }
+    if (!_initialized) await init();
 
     final now = DateTime.now();
     final nowMinutes = now.hour * 60 + now.minute;
@@ -202,7 +251,10 @@ class NotificationService {
       nextLesson.isDuty ? 'Dyżur za $minDiff min' : 'Przerwa za $minDiff min się kończy!',
       nextLesson.isDuty
           ? _formatDutyBody(nextLesson)
-          : 'Następna lekcja: ${nextLesson.subject} w sali ${nextLesson.room} (${nextLesson.startString}).',
+          : 'Następna lekcja: ${nextLesson.subject}'
+              '${nextLesson.room.isNotEmpty ? " · sala ${nextLesson.room}" : ""}'
+              '${nextLesson.className.isNotEmpty ? " · ${nextLesson.className}" : ""}'
+              ' (${nextLesson.startString}).',
       _notifDetails,
     );
 

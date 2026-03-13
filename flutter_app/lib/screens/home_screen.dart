@@ -174,6 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _infoMessage = result.warning;
       _isLoading = false;
     });
+
+    // Planowanie powiadomień o dyżurach w tle — nie blokuje UI
+    _notificationService.scheduleWeekDutyNotifications(result.weekTimetable);
   }
 
   Future<void> _handleLogout() async {
@@ -517,7 +520,13 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_currentBlock!.isBreak && _currentBlock!.nextLesson != null) ...[
               const SizedBox(height: 2),
               Text(
-                'Następnie: ${_currentBlock!.nextLesson!.subject} o ${_currentBlock!.nextLesson!.startString}',
+                [
+              'Następnie: ${_currentBlock!.nextLesson!.subject} o ${_currentBlock!.nextLesson!.startString}',
+              if (_currentBlock!.nextLesson!.room.isNotEmpty)
+                'sala ${_currentBlock!.nextLesson!.room}',
+              if (_currentBlock!.nextLesson!.className.isNotEmpty)
+                _currentBlock!.nextLesson!.className,
+            ].join(' · '),
                 style: const TextStyle(fontSize: 16, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),

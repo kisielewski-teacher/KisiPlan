@@ -1,0 +1,66 @@
+name: Build APK & IPA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: stable
+
+      - name: Get dependencies
+        run: flutter pub get
+        working-directory: flutter_app
+
+      - name: Build APK
+        run: flutter build apk --debug
+        working-directory: flutter_app
+
+      - name: Rename APK
+        run: cp flutter_app/build/app/outputs/flutter-apk/app-debug.apk Kisiplan.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kisiplan-apk
+          path: Kisiplan.apk
+
+  build-ipa:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: stable
+
+      - name: Get dependencies
+        run: flutter pub get
+        working-directory: flutter_app
+
+      - name: Build IPA (no codesign)
+        run: flutter build ipa --no-codesign
+        working-directory: flutter_app
+
+      - name: Rename IPA
+        run: cp flutter_app/build/ios/ipa/*.ipa Kisiplan.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kisiplan-ipa
+          path: Kisiplan.ipa

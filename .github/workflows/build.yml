@@ -57,12 +57,16 @@ jobs:
         run: pod install --repo-update
         working-directory: flutter_app/ios
 
-      - name: Build IPA (no codesign)
-        run: flutter build ipa --no-codesign --verbose
+      - name: Build iOS app (no codesign)
+        run: flutter build ios --no-codesign --release
         working-directory: flutter_app
 
-      - name: Rename IPA
-        run: cp flutter_app/build/ios/ipa/*.ipa Kisiplan.ipa
+      - name: Package as IPA
+        run: |
+          mkdir -p Payload
+          cp -r flutter_app/build/ios/iphoneos/Runner.app Payload/
+          zip -r Kisiplan.ipa Payload/
+          rm -rf Payload
 
       - uses: actions/upload-artifact@v4
         with:

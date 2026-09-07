@@ -3,39 +3,76 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/widget_background"
-    android:padding="12dp">
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background">
 
-    <TextView
-        android:id="@+id/widget_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Plan Mechanika"
-        android:textSize="12sp"
-        android:textColor="#9E9E9E" />
+    <!-- Accent bar, rounded to match the card's left edge. -->
+    <View
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_accent_bar" />
 
-    <TextView
-        android:id="@+id/widget_subject"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Brak lekcji"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="#212121"
-        android:maxLines="1"
-        android:ellipsize="end" />
+    <!-- Content column: vertically centered so it fills the widget nicely
+         whether the user places it at the minimum size or resizes it taller. -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
 
-    <TextView
-        android:id="@+id/widget_details"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text=""
-        android:textSize="13sp"
-        android:textColor="#616161"
-        android:maxLines="1"
-        android:ellipsize="end" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:layout_marginEnd="5dp"
+                android:src="@drawable/ic_schedule"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/widget_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plan Mechanika"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:letterSpacing="0.04"
+                android:textColor="@color/widget_accent" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_subject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Brak lekcji"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:textColor="@color/widget_subject"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/widget_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textSize="13sp"
+            android:textColor="@color/widget_details"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
 
 </LinearLayout>

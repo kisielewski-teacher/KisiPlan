@@ -102,13 +102,20 @@ jobs:
 
       - name: Determine version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          # Unix timestamp: always increases over time, so it never collides
+          # with (or falls behind) an ad-hoc local build's --build-number,
+          # unlike github.run_number which is unrelated to build recency and
+          # caused INSTALL_FAILED_VERSION_DOWNGRADE when a local test build
+          # was installed after a CI release with a higher run_number.
+          echo "build_number=$(date +%s)" >> "$GITHUB_OUTPUT"
 
       - name: Build release APK
         run: >
           flutter build apk --release
           --build-name=${{ steps.version.outputs.version }}
-          --build-number=${{ github.run_number }}
+          --build-number=${{ steps.version.outputs.build_number }}
         working-directory: flutter_app
 
       - name: Rename APK

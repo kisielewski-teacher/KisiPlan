@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:workmanager/workmanager.dart';
 import 'package:kisiplan/screens/login_screen.dart';
 import 'package:kisiplan/screens/home_screen.dart';
+import 'package:kisiplan/services/background_sync_service.dart';
 import 'package:kisiplan/services/notification_service.dart';
 import 'package:kisiplan/services/timetable_service.dart';
 
@@ -16,7 +18,27 @@ void main() async {
   }
 
   await NotificationService().init();
+  await _registerBackgroundSync();
   runApp(const SzkolplanApp());
+}
+
+/// Periodically re-fetches the timetable in the background so the user gets
+/// notified about plan changes (and the home screen widget stays current)
+/// even while the app isn't open. Android only — see background_sync_service.dart.
+Future<void> _registerBackgroundSync() async {
+  if (!Platform.isAndroid) return;
+  try {
+    await Workmanager().initialize(backgroundSyncCallbackDispatcher);
+    await Workmanager().registerPeriodicTask(
+      backgroundSyncTaskName,
+      backgroundSyncTaskName,
+      frequency: const Duration(minutes: 30),
+      constraints: Constraints(networkType: NetworkType.connected),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    );
+  } catch (_) {
+    // Background sync is a nice-to-have — never block app startup on it.
+  }
 }
 
 class SzkolplanApp extends StatefulWidget {

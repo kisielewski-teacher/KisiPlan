@@ -21,6 +21,7 @@ class NotificationService {
   static const _idBreakEnding = 1003;
   static const _idEndOfDay = 1004;
   static const _idMorning = 1005;
+  static const _idPlanChanged = 1006;
   static const _idDutyBase = 2000;
   static const _idDutyWarningBase = 4000;
 
@@ -322,5 +323,20 @@ class NotificationService {
     );
 
     await prefs.setString(key, '1');
+  }
+
+  /// Fired by the background sync task when a freshly-fetched timetable
+  /// differs from the previously cached one (new substitution, cancellation,
+  /// duty, room change, ...).
+  Future<void> notifyPlanChanged() async {
+    if (!_platformSupported) return;
+    if (!_initialized) await init();
+
+    await _plugin.show(
+      id: _idPlanChanged,
+      title: 'Plan lekcji się zmienił',
+      body: 'W Librusie pojawiła się zmiana w planie — sprawdź aplikację.',
+      notificationDetails: _notifDetails,
+    );
   }
 }

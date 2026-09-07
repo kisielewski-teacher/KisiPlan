@@ -6,6 +6,7 @@ import 'package:kisiplan/models/lesson.dart';
 import 'package:kisiplan/services/notification_service.dart';
 import 'package:kisiplan/services/timetable_service.dart';
 import 'package:kisiplan/services/update_service.dart';
+import 'package:kisiplan/services/widget_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Adres, na który trafiają pomysły użytkowników zgłoszone z aplikacji.
@@ -67,6 +68,7 @@ class _ScheduleBlock {
 class _HomeScreenState extends State<HomeScreen> {
   final NotificationService _notificationService = NotificationService();
   final UpdateService _updateService = UpdateService();
+  final WidgetService _widgetService = WidgetService();
   List<Lesson> _todayLessons = [];
   Map<String, List<Lesson>> _weekTimetable = {};
   _ScheduleBlock? _currentBlock;
@@ -153,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       if (now.second == 0) {
         _notificationService.checkAndNotify(_todayLessons);
+        _widgetService.updateFromTodayLessons(_todayLessons);
       }
     });
   }
@@ -185,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Planowanie powiadomień o dyżurach w tle — nie blokuje UI
     _notificationService.scheduleWeekDutyNotifications(result.weekTimetable);
+    _widgetService.updateFromTodayLessons(result.lessons);
   }
 
   Future<void> _handleLogout() async {

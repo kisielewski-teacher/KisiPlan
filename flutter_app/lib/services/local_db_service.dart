@@ -18,7 +18,7 @@ class LocalDbService {
 
     _db = await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_table(
@@ -31,6 +31,7 @@ class LocalDbService {
             class_name TEXT NOT NULL DEFAULT '',
             is_substitution INTEGER NOT NULL DEFAULT 0,
             is_duty INTEGER NOT NULL DEFAULT 0,
+            is_cancelled INTEGER NOT NULL DEFAULT 0,
             original_subject TEXT,
             original_room TEXT,
             original_class_name TEXT
@@ -49,6 +50,9 @@ class LocalDbService {
         }
         if (oldVersion < 4) {
           await db.execute('ALTER TABLE $_table ADD COLUMN is_duty INTEGER NOT NULL DEFAULT 0');
+        }
+        if (oldVersion < 5) {
+          await db.execute('ALTER TABLE $_table ADD COLUMN is_cancelled INTEGER NOT NULL DEFAULT 0');
         }
       },
     );
@@ -73,6 +77,7 @@ class LocalDbService {
           'class_name': lesson.className,
           'is_substitution': lesson.isSubstitution ? 1 : 0,
           'is_duty': lesson.isDuty ? 1 : 0,
+          'is_cancelled': lesson.isCancelled ? 1 : 0,
           'original_subject': lesson.originalSubject,
           'original_room': lesson.originalRoom,
           'original_class_name': lesson.originalClassName,
@@ -100,6 +105,7 @@ class LocalDbService {
           'className': row['class_name'] ?? '',
           'isSubstitution': (row['is_substitution'] as int?) == 1,
           'isDuty': (row['is_duty'] as int?) == 1,
+          'isCancelled': (row['is_cancelled'] as int?) == 1,
           'originalSubject': row['original_subject'],
           'originalRoom': row['original_room'],
           'originalClassName': row['original_class_name'],

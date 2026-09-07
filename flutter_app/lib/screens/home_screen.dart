@@ -432,7 +432,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Icon(Icons.person_outline, size: 15, color: Colors.purple),
                   const SizedBox(width: 4),
-                  Expanded(child: Text(lesson.subject, style: TextStyle(fontSize: compact ? 13 : 14))),
+                  Expanded(
+                    child: Text(
+                      lesson.subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: compact ? 13 : 14),
+                    ),
+                  ),
                 ],
               )
             : lesson.isCancelled
@@ -443,6 +450,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Text(
                       lesson.subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         decoration: TextDecoration.lineThrough,
                         color: Colors.grey,
@@ -459,6 +468,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     lesson.originalSubject!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey,
@@ -469,12 +480,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Icon(Icons.swap_horiz, size: 15, color: Colors.orange),
                       const SizedBox(width: 4),
-                      Expanded(child: Text(lesson.subject, style: TextStyle(fontSize: compact ? 13 : 14))),
+                      Expanded(
+                        child: Text(
+                          lesson.subject,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: compact ? 13 : 14),
+                        ),
+                      ),
                     ],
                   ),
                 ],
               )
-            : Text(lesson.subject, style: TextStyle(fontSize: compact ? 13 : 14)),
+            : Text(
+                lesson.subject,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: compact ? 13 : 14),
+              ),
         subtitle: lesson.isCancelled
             ? (lesson.className.isNotEmpty
                 ? Text(
@@ -507,32 +530,50 @@ class _HomeScreenState extends State<HomeScreen> {
             : lesson.className.isNotEmpty
                 ? Text(lesson.className, style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey))
                 : null,
-        trailing: lesson.isCancelled
-            ? Text(
-                'sala ${lesson.room}',
-                style: TextStyle(
-                  decoration: TextDecoration.lineThrough,
-                  color: Colors.grey,
-                  fontSize: compact ? 12 : 14,
-                ),
-              )
+        trailing: lesson.isDuty
+            ? _roomTrailing(lesson.room, compact: compact)
+            : lesson.isCancelled
+            ? _roomTrailing('sala ${lesson.room}', compact: compact, strikeThrough: true)
             : lesson.isSubstitution && lesson.originalRoom != null
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
+                  _roomTrailing(
                     'sala ${lesson.originalRoom}',
-                    style: TextStyle(
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey,
-                      fontSize: compact ? 11 : 13,
-                    ),
+                    compact: compact,
+                    strikeThrough: true,
+                    fontSize: compact ? 11 : 13,
                   ),
-                  Text('sala ${lesson.room}', style: TextStyle(fontSize: compact ? 12 : 14)),
+                  _roomTrailing('sala ${lesson.room}', compact: compact),
                 ],
               )
-            : Text('sala ${lesson.room}', style: TextStyle(fontSize: compact ? 12 : 14)),
+            : _roomTrailing('sala ${lesson.room}', compact: compact),
+      ),
+    );
+  }
+
+  /// A trailing room/location label constrained to a fixed max width so a
+  /// long string (e.g. a duty location like a street name) can't squeeze the
+  /// title column down to almost nothing — it wraps/truncates instead.
+  Widget _roomTrailing(
+    String text, {
+    bool compact = false,
+    bool strikeThrough = false,
+    double? fontSize,
+  }) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 110),
+      child: Text(
+        text,
+        textAlign: TextAlign.end,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          decoration: strikeThrough ? TextDecoration.lineThrough : null,
+          color: strikeThrough ? Colors.grey : null,
+          fontSize: fontSize ?? (compact ? 12 : 14),
+        ),
       ),
     );
   }

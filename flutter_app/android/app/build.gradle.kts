@@ -31,11 +31,30 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // Checked into the repo on purpose: this is a debug-only key (not
+        // used for Play Store releases), shared between local machines and
+        // CI so every build has the same signature. Without this, each CI
+        // run (and each developer machine) gets its own auto-generated
+        // debug.keystore, and installing a differently-signed APK forces
+        // Android to uninstall the old one first — wiping app data.
+        create("sharedDebug") {
+            storeFile = file("../shared-debug.keystore.jks")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("sharedDebug")
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Signing with the shared debug key for now, so `flutter run
+            // --release` and `flutter build apk` work without a real
+            // release signing config.
+            signingConfig = signingConfigs.getByName("sharedDebug")
         }
     }
 }

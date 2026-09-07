@@ -18,7 +18,7 @@ Pełna instrukcja obsługi, wymagania i instrukcja instalacji znajdują się w [
 
 ## Struktura projektu
 
-```
+```text
 lib/
 ├── main.dart                          # Punkt wejścia aplikacji
 ├── models/

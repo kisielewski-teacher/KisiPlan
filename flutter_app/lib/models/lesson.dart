@@ -8,6 +8,9 @@ class Lesson {
   final String className;
   final bool isSubstitution;
   final bool isDuty;
+  // Whole lesson struck through in the dziennik with no replacement lesson
+  // taking its place (e.g. teacher/class absence, cancelled lesson).
+  final bool isCancelled;
   // Non-null only when isSubstitution == true — the lesson that was cancelled
   final String? originalSubject;
   final String? originalRoom;
@@ -21,6 +24,7 @@ class Lesson {
     this.className = '',
     this.isSubstitution = false,
     this.isDuty = false,
+    this.isCancelled = false,
     this.originalSubject,
     this.originalRoom,
     this.originalClassName,
@@ -38,6 +42,7 @@ class Lesson {
       className: (json['className'] ?? '').toString(),
       isSubstitution: (json['isSubstitution'] as bool?) ?? false,
       isDuty: (json['isDuty'] as bool?) ?? false,
+      isCancelled: (json['isCancelled'] as bool?) ?? false,
       originalSubject: json['originalSubject'] as String?,
       originalRoom: json['originalRoom'] as String?,
       originalClassName: json['originalClassName'] as String?,
@@ -67,6 +72,7 @@ class Lesson {
       'className': className,
       'isSubstitution': isSubstitution,
       'isDuty': isDuty,
+      'isCancelled': isCancelled,
       if (originalSubject != null) 'originalSubject': originalSubject,
       if (originalRoom != null) 'originalRoom': originalRoom,
       if (originalClassName != null) 'originalClassName': originalClassName,

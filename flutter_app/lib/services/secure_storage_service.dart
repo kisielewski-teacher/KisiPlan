@@ -7,11 +7,10 @@ class SecureStorageService {
   static const _tokenKey = 'auth_token';
   static const _roleKey = 'auth_role'; // 'teacher' | 'student'
   static const _cookiesKey = 'auth_cookies'; // session cookies for synergia
+  static const _portalCookiesKey = 'auth_portal_cookies'; // portal.librus.pl cookies
   static const _lessonTimesKey = 'lesson_times'; // cached lesson period times
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<void> saveCredentials({
     required String username,
@@ -51,6 +50,14 @@ class SecureStorageService {
     return _storage.read(key: _cookiesKey);
   }
 
+  Future<void> savePortalCookies(String cookies) async {
+    await _storage.write(key: _portalCookiesKey, value: cookies);
+  }
+
+  Future<String?> readPortalCookies() {
+    return _storage.read(key: _portalCookiesKey);
+  }
+
   Future<void> saveLessonTimes(Map<int, Map<String, String>> times) async {
     final encoded = jsonEncode(times.map((k, v) => MapEntry(k.toString(), v)));
     await _storage.write(key: _lessonTimesKey, value: encoded);
@@ -73,6 +80,7 @@ class SecureStorageService {
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _roleKey);
     await _storage.delete(key: _cookiesKey);
+    await _storage.delete(key: _portalCookiesKey);
     await _storage.delete(key: _lessonTimesKey);
   }
 }

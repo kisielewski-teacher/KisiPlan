@@ -12,3 +12,9 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Exception: shared-debug.keystore.jks is a debug-only key (public default
+# password "android", no release/Play Store use) checked in on purpose so
+# local builds and CI produce APKs with the same signature — see
+# android/app/build.gradle.kts signingConfigs.sharedDebug.
+!shared-debug.keystore.jks

@@ -1,9 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:kisiplan/models/lesson.dart';
 import 'package:kisiplan/services/notification_service.dart';
 import 'package:kisiplan/services/timetable_service.dart';
+import 'package:kisiplan/services/update_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Adres, na który trafiają pomysły użytkowników zgłoszone z aplikacji.
+const _feedbackEmail = 'oxykisiel@gmail.com';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -21,7 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 class _ScheduleBlock {
   _ScheduleBlock.lesson(Lesson lesson)
-      : lesson = lesson,
+      : lesson = lesson, // ignore: prefer_initializing_formals
         isBreak = false,
         previousLesson = null,
         nextLesson = null,
@@ -60,6 +66,7 @@ class _ScheduleBlock {
 
 class _HomeScreenState extends State<HomeScreen> {
   final NotificationService _notificationService = NotificationService();
+  final UpdateService _updateService = UpdateService();
   List<Lesson> _todayLessons = [];
   Map<String, List<Lesson>> _weekTimetable = {};
   _ScheduleBlock? _currentBlock;
@@ -135,6 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadTimetable();
+    _checkForUpdateSilently();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = DateTime.now();
       setState(() {
@@ -183,12 +191,103 @@ class _HomeScreenState extends State<HomeScreen> {
     await widget.onLogout();
   }
 
+  Future<void> _checkForUpdateSilently() async {
+    final update = await _updateService.checkForUpdate();
+    if (update == null || !mounted) return;
+    _showUpdateDialog(update);
+  }
+
+  Future<void> _checkForUpdateManually() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final update = await _updateService.checkForUpdate();
+    if (!mounted) return;
+    if (update == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Masz już najnowszą wersję aplikacji.')),
+      );
+      return;
+    }
+    _showUpdateDialog(update);
+  }
+
+  void _showUpdateDialog(UpdateInfo update) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => _UpdateDialog(update: update, updateService: _updateService),
+    );
+  }
+
+  Future<void> _openIdeaDialog() async {
+    final controller = TextEditingController();
+    final idea = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Prześlij pomysł'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 5,
+          minLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Opisz swój pomysł na aplikację...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Wyślij'),
+          ),
+        ],
+      ),
+    );
+
+    if (idea == null || idea.isEmpty) return;
+    await _sendIdea(idea);
+  }
+
+  Future<void> _sendIdea(String idea) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: _feedbackEmail,
+      query: 'subject=${Uri.encodeComponent('Pomysł na Plan Mechanika')}'
+          '&body=${Uri.encodeComponent(idea)}',
+    );
+
+    final launched = await launchUrl(uri);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          launched
+              ? 'Otwarto aplikację pocztową z Twoim pomysłem.'
+              : 'Nie udało się otworzyć aplikacji pocztowej.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('KisiPlan'),
+        title: const Text('Plan Mechanika'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.system_update),
+            tooltip: 'Sprawdź aktualizacje',
+            onPressed: _checkForUpdateManually,
+          ),
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            tooltip: 'Prześlij pomysł',
+            onPressed: _openIdeaDialog,
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _handleLogout,
@@ -242,24 +341,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 24, 16, 24 + bottomInset),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Image.asset(
-              'assets/kisiciel.jpg',
-              width: 48,
-              height: 48,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'Autor: Marcin Kisielewski',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
-          ),
-        ],
+      child: const Center(
+        child: Text(
+          'Autor: Marcin Kisielewski',
+          style: TextStyle(fontSize: 13, color: Colors.grey),
+        ),
       ),
     );
   }
@@ -328,6 +414,8 @@ class _HomeScreenState extends State<HomeScreen> {
       cardColor = Colors.blue.shade50;
     } else if (lesson.isDuty) {
       cardColor = Colors.purple.shade50;
+    } else if (lesson.isCancelled) {
+      cardColor = Colors.grey.shade200;
     } else if (lesson.isSubstitution) {
       cardColor = Colors.orange.shade50;
     }
@@ -345,6 +433,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.person_outline, size: 15, color: Colors.purple),
                   const SizedBox(width: 4),
                   Expanded(child: Text(lesson.subject, style: TextStyle(fontSize: compact ? 13 : 14))),
+                ],
+              )
+            : lesson.isCancelled
+            ? Row(
+                children: [
+                  const Icon(Icons.event_busy, size: 15, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      lesson.subject,
+                      style: TextStyle(
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                        fontSize: compact ? 13 : 14,
+                      ),
+                    ),
+                  ),
                 ],
               )
             : lesson.isSubstitution && lesson.originalSubject != null
@@ -370,7 +475,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               )
             : Text(lesson.subject, style: TextStyle(fontSize: compact ? 13 : 14)),
-        subtitle: lesson.isSubstitution && lesson.originalClassName != null
+        subtitle: lesson.isCancelled
+            ? (lesson.className.isNotEmpty
+                ? Text(
+                    lesson.className,
+                    style: TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: Colors.grey,
+                      fontSize: compact ? 10 : 12,
+                    ),
+                  )
+                : null)
+            : lesson.isSubstitution && lesson.originalClassName != null
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -391,7 +507,16 @@ class _HomeScreenState extends State<HomeScreen> {
             : lesson.className.isNotEmpty
                 ? Text(lesson.className, style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey))
                 : null,
-        trailing: lesson.isSubstitution && lesson.originalRoom != null
+        trailing: lesson.isCancelled
+            ? Text(
+                'sala ${lesson.room}',
+                style: TextStyle(
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey,
+                  fontSize: compact ? 12 : 14,
+                ),
+              )
+            : lesson.isSubstitution && lesson.originalRoom != null
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -614,5 +739,166 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+  }
+}
+
+enum _UpdateStage { prompt, downloading, needsPermission, readyToInstall, error }
+
+class _UpdateDialog extends StatefulWidget {
+  const _UpdateDialog({required this.update, required this.updateService});
+
+  final UpdateInfo update;
+  final UpdateService updateService;
+
+  @override
+  State<_UpdateDialog> createState() => _UpdateDialogState();
+}
+
+class _UpdateDialogState extends State<_UpdateDialog> {
+  _UpdateStage _stage = _UpdateStage.prompt;
+  double _progress = 0;
+  String? _errorMessage;
+  File? _downloadedFile;
+
+  Future<void> _startDownload() async {
+    setState(() {
+      _stage = _UpdateStage.downloading;
+      _progress = 0;
+      _errorMessage = null;
+    });
+
+    try {
+      final file = await widget.updateService.download(
+        widget.update.downloadUrl,
+        (progress) {
+          if (!mounted) return;
+          setState(() => _progress = progress);
+        },
+      );
+      if (!mounted) return;
+      _downloadedFile = file;
+      await _proceedToInstall();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _stage = _UpdateStage.error;
+        _errorMessage = 'Nie udało się pobrać aktualizacji: $e';
+      });
+    }
+  }
+
+  Future<void> _proceedToInstall() async {
+    final canInstall = await widget.updateService.canRequestInstalls();
+    if (!mounted) return;
+    if (!canInstall) {
+      setState(() => _stage = _UpdateStage.needsPermission);
+      return;
+    }
+    setState(() => _stage = _UpdateStage.readyToInstall);
+    await widget.updateService.installApk(_downloadedFile!.path);
+  }
+
+  Future<void> _openSettingsThenRetry() async {
+    await widget.updateService.openInstallPermissionSettings();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Nowa wersja dostępna'),
+      content: SingleChildScrollView(child: _buildContent()),
+      actions: _buildActions(),
+    );
+  }
+
+  Widget _buildContent() {
+    switch (_stage) {
+      case _UpdateStage.prompt:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Dostępna jest wersja ${widget.update.version}.'),
+            if (widget.update.releaseNotes.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(widget.update.releaseNotes),
+            ],
+          ],
+        );
+      case _UpdateStage.downloading:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LinearProgressIndicator(value: _progress > 0 ? _progress : null),
+            const SizedBox(height: 8),
+            Text('Pobieranie... ${(_progress * 100).toStringAsFixed(0)}%'),
+          ],
+        );
+      case _UpdateStage.needsPermission:
+        return const Text(
+          'Aby zainstalować aktualizację, zezwól aplikacji na instalowanie '
+          'nieznanych aplikacji w ustawieniach systemowych, a następnie wróć tutaj.',
+        );
+      case _UpdateStage.readyToInstall:
+        return const Text('Otwieranie instalatora...');
+      case _UpdateStage.error:
+        return Text(_errorMessage ?? 'Wystąpił nieznany błąd.');
+    }
+  }
+
+  List<Widget> _buildActions() {
+    switch (_stage) {
+      case _UpdateStage.prompt:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Później'),
+          ),
+          FilledButton(
+            onPressed: _startDownload,
+            child: const Text('Pobierz i zainstaluj'),
+          ),
+        ];
+      case _UpdateStage.downloading:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Anuluj'),
+          ),
+        ];
+      case _UpdateStage.needsPermission:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Zamknij'),
+          ),
+          TextButton(
+            onPressed: _openSettingsThenRetry,
+            child: const Text('Otwórz ustawienia'),
+          ),
+          FilledButton(
+            onPressed: _proceedToInstall,
+            child: const Text('Kontynuuj'),
+          ),
+        ];
+      case _UpdateStage.readyToInstall:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Zamknij'),
+          ),
+        ];
+      case _UpdateStage.error:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Zamknij'),
+          ),
+          FilledButton(
+            onPressed: _startDownload,
+            child: const Text('Spróbuj ponownie'),
+          ),
+        ];
+    }
   }
 }

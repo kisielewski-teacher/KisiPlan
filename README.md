@@ -58,11 +58,14 @@ Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i n
 1. Podłącz telefon do komputera kablem USB.
 2. Na telefonie włącz **Opcje programisty** i **Debugowanie USB** (Ustawienia → Informacje o telefonie → kliknij 7 razy numer kompilacji).
 3. W terminalu na komputerze uruchom:
-   ```
+
+   ```powershell
    flutter install
    ```
+
    lub
-   ```
+
+   ```powershell
    adb install build\app\outputs\flutter-apk\app-debug.apk
    ```
 
@@ -279,7 +282,7 @@ flutter build windows
 
 ### Struktura projektu
 
-```
+```text
 flutter_app/lib/
 ├── main.dart                          # Start aplikacji
 ├── models/

@@ -117,7 +117,7 @@ class _SzkolplanAppState extends State<SzkolplanApp> {
     }
 
     return MaterialApp(
-      title: 'KisiPlan',
+      title: 'Plan Mechanika',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),

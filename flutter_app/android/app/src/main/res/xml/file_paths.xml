@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Downloaded update APKs are saved to the app's cache dir via
+         path_provider's getTemporaryDirectory(). -->
+    <cache-path name="cache" path="."/>
+</paths>

@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,9 +22,14 @@ class NotificationService {
   static const _idEndOfDay = 1004;
   static const _idMorning = 1005;
   static const _idDutyBase = 2000;
+  static const _idDutyWarningBase = 4000;
 
   // Ile minut przed lekcją wysłać powiadomienie o końcu przerwy
-  static const _breakEndingMinutes = 3;
+  static const _breakEndingMinutes = 2;
+  // Ile minut przed dyżurem wysłać ostrzeżenie
+  static const _dutyWarningLong = 10;   // przed 1. lekcją / długa przerwa
+  static const _dutyWarningShort = 5;   // pozostałe
+  static const _longBreakMinutes = 15;  // próg długiej przerwy
 
   static const _androidDetails = AndroidNotificationDetails(
     _channelId,
@@ -48,8 +54,15 @@ class NotificationService {
     return '$locationText Dyżur trwa ${duty.startString}-${duty.endString}.';
   }
 
+  static bool get _platformSupported =>
+      Platform.isAndroid || Platform.isIOS;
+
   Future<void> init() async {
     if (_initialized) return;
+    if (!_platformSupported) {
+      _initialized = true;
+      return;
+    }
 
     tz.initializeTimeZones();
     final tzInfo = await FlutterTimezone.getLocalTimezone();
@@ -59,7 +72,7 @@ class NotificationService {
     const ios = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: ios);
 
-    await _plugin.initialize(settings);
+    await _plugin.initialize(settings: settings);
 
     await _plugin
         .resolvePlatformSpecificImplementation<
@@ -77,13 +90,15 @@ class NotificationService {
   /// Wywołaj po załadowaniu tygodniowego planu.
   Future<void> scheduleWeekDutyNotifications(
       Map<String, List<Lesson>> weekTimetable) async {
+    if (!_platformSupported) return;
     if (!_initialized) await init();
 
     // Anuluj poprzednio zaplanowane powiadomienia o dyżurach
     final pending = await _plugin.pendingNotificationRequests();
     for (final n in pending) {
-      if (n.id >= _idDutyBase && n.id < _idDutyBase + 10000) {
-        await _plugin.cancel(n.id);
+      if ((n.id >= _idDutyBase && n.id < _idDutyBase + 10000) ||
+          (n.id >= _idDutyWarningBase && n.id < _idDutyWarningBase + 10000)) {
+        await _plugin.cancel(id: n.id);
       }
     }
 
@@ -104,6 +119,7 @@ class NotificationService {
       if (offset == null) continue;
 
       final dayDate = monday.add(Duration(days: offset));
+      final nonDuty = entry.value.where((l) => !l.isDuty).toList();
 
       for (final lesson in entry.value.where((l) => l.isDuty)) {
         final scheduledAt = tz.TZDateTime(
@@ -122,15 +138,51 @@ class NotificationService {
             ((entry.key + lesson.startString + lesson.room).hashCode &
                 0x1FFF);
 
+        // Dobierz czas ostrzeżenia wg kontekstu
+        int warnMin = _dutyWarningShort;
+        if (nonDuty.isEmpty ||
+            lesson.startMinutes <= nonDuty.first.startMinutes) {
+          // Dyżur przed pierwszą lekcją
+          warnMin = _dutyWarningLong;
+        } else {
+          // Sprawdź czy dyżur wypada na długiej przerwie
+          for (int i = 0; i < nonDuty.length - 1; i++) {
+            final gap =
+                nonDuty[i + 1].startMinutes - nonDuty[i].endMinutes;
+            if (gap >= _longBreakMinutes &&
+                lesson.startMinutes >= nonDuty[i].endMinutes &&
+                lesson.startMinutes <= nonDuty[i + 1].startMinutes) {
+              warnMin = _dutyWarningLong;
+              break;
+            }
+          }
+        }
+
+        // Powiadomienie ostrzegawcze X minut przed dyżurem
+        final warningAt = scheduledAt.subtract(
+            Duration(minutes: warnMin));
+        if (warningAt.isAfter(tz.TZDateTime.now(tz.local))) {
+          final warningId = _idDutyWarningBase +
+              ((entry.key + lesson.startString + lesson.room).hashCode &
+                  0x1FFF);
+          await _plugin.zonedSchedule(
+            id: warningId,
+            title: 'Dyżur za $warnMin min',
+            body: _formatDutyBody(lesson),
+            scheduledDate: warningAt,
+            notificationDetails: _notifDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          );
+        }
+
+        // Powiadomienie na start dyżuru
         await _plugin.zonedSchedule(
-          id,
-          'Zaczyna się dyżur',
-          _formatDutyBody(lesson),
-          scheduledAt,
-          _notifDetails,
+          id: id,
+          title: 'Zaczyna się dyżur',
+          body: _formatDutyBody(lesson),
+          scheduledDate: scheduledAt,
+          notificationDetails: _notifDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
         );
       }
     }
@@ -139,6 +191,7 @@ class NotificationService {
   /// Sprawdza aktualny stan i wysyła odpowiednie powiadomienie.
   /// Wywoływana co minutę z timera.
   Future<void> checkAndNotify(List<Lesson> lessons) async {
+    if (!_platformSupported) return;
     if (lessons.isEmpty) return;
     if (!_initialized) await init();
 
@@ -159,10 +212,10 @@ class NotificationService {
             ? 'Miłego weekendu! Do zobaczenia w poniedziałek!'
             : 'Miłego dnia! Odpocznij i przygotuj się na jutro.';
         await _plugin.show(
-          _idEndOfDay,
-          'Lekcje skończone na dziś!',
-          body,
-          _notifDetails,
+          id: _idEndOfDay,
+          title: 'Lekcje skończone na dziś!',
+          body: body,
+          notificationDetails: _notifDetails,
         );
         await prefs.setString(key, '1');
       }
@@ -176,11 +229,11 @@ class NotificationService {
         final key = 'morning_${dateKey}_${firstLesson.startString}';
         if (prefs.getString(key) == null) {
           await _plugin.show(
-            _idMorning,
-            'Dzień dobry!',
-            'Niedługo zaczynają się lekcje o ${firstLesson.startString}. '
+            id: _idMorning,
+            title: 'Dzień dobry!',
+            body: 'Niedługo zaczynają się lekcje o ${firstLesson.startString}. '
                 'Pierwsza: ${firstLesson.subject} w sali ${firstLesson.room}.',
-            _notifDetails,
+            notificationDetails: _notifDetails,
           );
           await prefs.setString(key, '1');
         }
@@ -205,14 +258,23 @@ class NotificationService {
       if (diff <= _breakEndingMinutes && diff > 0) {
         final key = 'break_ending_${dateKey}_${nextLesson.startString}';
         if (prefs.getString(key) == null) {
-          await _plugin.show(
-            _notificationIdFor(key, _idBreakEnding),
-            'Przerwa za $diff min się kończy!',
-            'Następna lekcja: ${nextLesson.subject}'
+          final String title;
+          final String body;
+          if (nextLesson.isDuty) {
+            title = 'Dyżur za $diff min!';
+            body = _formatDutyBody(nextLesson);
+          } else {
+            title = 'Przerwa za $diff min się kończy!';
+            body = 'Następna lekcja: ${nextLesson.subject}'
                 '${nextLesson.room.isNotEmpty ? " · sala ${nextLesson.room}" : ""}'
                 '${nextLesson.className.isNotEmpty ? " · ${nextLesson.className}" : ""}'
-                ' (${nextLesson.startString}).',
-            _notifDetails,
+                ' (${nextLesson.startString}).';
+          }
+          await _plugin.show(
+            id: _notificationIdFor(key, _idBreakEnding),
+            title: title,
+            body: body,
+            notificationDetails: _notifDetails,
           );
           await prefs.setString(key, '1');
         }
@@ -222,6 +284,7 @@ class NotificationService {
 
   /// Powiadomienie przy pierwszym załadowaniu planu (gdy lekcja za chwilę).
   Future<void> notifyIfLessonStartsSoon(List<Lesson> lessons) async {
+    if (!_platformSupported) return;
     if (lessons.isEmpty) return;
     if (!_initialized) await init();
 
@@ -241,23 +304,23 @@ class NotificationService {
 
     if (nextLesson == null || minDiff > _breakEndingMinutes) return;
 
-    final todayKey =
-        '${now.year}-${now.month}-${now.day}-${nextLesson.subject}-${nextLesson.startString}';
+    final dateKey = '${now.year}-${now.month}-${now.day}';
+    final key = 'break_ending_${dateKey}_${nextLesson.startString}';
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('last_notification_key') == todayKey) return;
+    if (prefs.getString(key) != null) return;
 
     await _plugin.show(
-      _notificationIdFor(todayKey, _idBreakEnding),
-      nextLesson.isDuty ? 'Dyżur za $minDiff min' : 'Przerwa za $minDiff min się kończy!',
-      nextLesson.isDuty
+      id: _notificationIdFor(key, _idBreakEnding),
+      title: nextLesson.isDuty ? 'Dyżur za $minDiff min' : 'Przerwa za $minDiff min się kończy!',
+      body: nextLesson.isDuty
           ? _formatDutyBody(nextLesson)
           : 'Następna lekcja: ${nextLesson.subject}'
               '${nextLesson.room.isNotEmpty ? " · sala ${nextLesson.room}" : ""}'
               '${nextLesson.className.isNotEmpty ? " · ${nextLesson.className}" : ""}'
               ' (${nextLesson.startString}).',
-      _notifDetails,
+      notificationDetails: _notifDetails,
     );
 
-    await prefs.setString('last_notification_key', todayKey);
+    await prefs.setString(key, '1');
   }
 }

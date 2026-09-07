@@ -196,22 +196,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkForUpdateSilently() async {
-    final update = await _updateService.checkForUpdate();
-    if (update == null || !mounted) return;
-    _showUpdateDialog(update);
+    try {
+      final update = await _updateService.checkForUpdate();
+      if (update == null || !mounted) return;
+      _showUpdateDialog(update);
+    } catch (_) {
+      // Silent background check — a transient failure (offline, GitHub
+      // rate limit, ...) shouldn't interrupt the user; it'll try again
+      // next time the app opens.
+    }
   }
 
   Future<void> _checkForUpdateManually() async {
     final messenger = ScaffoldMessenger.of(context);
-    final update = await _updateService.checkForUpdate();
-    if (!mounted) return;
-    if (update == null) {
+    try {
+      final update = await _updateService.checkForUpdate();
+      if (!mounted) return;
+      if (update == null) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Masz już najnowszą wersję aplikacji.')),
+        );
+        return;
+      }
+      _showUpdateDialog(update);
+    } catch (e) {
+      if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('Masz już najnowszą wersję aplikacji.')),
+        SnackBar(content: Text('Nie udało się sprawdzić aktualizacji: ${e.toString().replaceFirst('Exception: ', '')}')),
       );
-      return;
     }
-    _showUpdateDialog(update);
   }
 
   void _showUpdateDialog(UpdateInfo update) {

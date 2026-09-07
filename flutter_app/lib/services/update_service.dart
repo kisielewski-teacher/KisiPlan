@@ -28,46 +28,67 @@ class UpdateService {
   static const _channel = MethodChannel('com.example.kisiplan/installer');
 
   /// Returns update info if a newer version is published on GitHub, or null
-  /// if there's nothing newer, no APK asset, or the check failed (offline,
-  /// rate-limited, etc.) — failures are swallowed since this runs silently.
+  /// if the check succeeded but there's genuinely nothing newer (or the
+  /// release has no APK asset attached).
+  ///
+  /// Throws on failure (offline, GitHub API rate limit, malformed response,
+  /// ...) instead of swallowing it — callers that run silently in the
+  /// background should catch and ignore; a manual "check now" button should
+  /// show the error instead of misreporting "up to date".
   Future<UpdateInfo?> checkForUpdate() async {
+    final http.Response res;
     try {
-      final res = await http
+      res = await http
           .get(
             Uri.parse('https://api.github.com/repos/$_owner/$_repo/releases/latest'),
             headers: {'Accept': 'application/vnd.github+json'},
           )
           .timeout(const Duration(seconds: 10));
-      if (res.statusCode != 200) return null;
-
-      final data = json.decode(res.body) as Map<String, dynamic>;
-      final tag = (data['tag_name'] as String?) ?? '';
-      final latestVersion = tag.startsWith('v') ? tag.substring(1) : tag;
-      if (latestVersion.isEmpty) return null;
-
-      final assets = (data['assets'] as List?) ?? [];
-      String? downloadUrl;
-      for (final raw in assets) {
-        final asset = raw as Map<String, dynamic>;
-        final name = (asset['name'] as String? ?? '').toLowerCase();
-        if (name.endsWith('.apk')) {
-          downloadUrl = asset['browser_download_url'] as String?;
-          break;
-        }
-      }
-      if (downloadUrl == null) return null;
-
-      final currentVersion = (await PackageInfo.fromPlatform()).version;
-      if (!_isNewer(latestVersion, currentVersion)) return null;
-
-      return UpdateInfo(
-        version: latestVersion,
-        downloadUrl: downloadUrl,
-        releaseNotes: (data['body'] as String?)?.trim() ?? '',
-      );
-    } catch (_) {
-      return null;
+    } catch (e) {
+      throw Exception('Brak połączenia z GitHubem.');
     }
+
+    if (res.statusCode == 403) {
+      throw Exception('GitHub odrzucił zapytanie (limit zapytań) — spróbuj ponownie za jakiś czas.');
+    }
+    if (res.statusCode == 404) {
+      throw Exception('Nie znaleziono żadnego wydania na GitHubie.');
+    }
+    if (res.statusCode != 200) {
+      throw Exception('GitHub zwrócił błąd (HTTP ${res.statusCode}).');
+    }
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(res.body) as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Nieprawidłowa odpowiedź z GitHuba.');
+    }
+
+    final tag = (data['tag_name'] as String?) ?? '';
+    final latestVersion = tag.startsWith('v') ? tag.substring(1) : tag;
+    if (latestVersion.isEmpty) return null;
+
+    final assets = (data['assets'] as List?) ?? [];
+    String? downloadUrl;
+    for (final raw in assets) {
+      final asset = raw as Map<String, dynamic>;
+      final name = (asset['name'] as String? ?? '').toLowerCase();
+      if (name.endsWith('.apk')) {
+        downloadUrl = asset['browser_download_url'] as String?;
+        break;
+      }
+    }
+    if (downloadUrl == null) return null;
+
+    final currentVersion = (await PackageInfo.fromPlatform()).version;
+    if (!_isNewer(latestVersion, currentVersion)) return null;
+
+    return UpdateInfo(
+      version: latestVersion,
+      downloadUrl: downloadUrl,
+      releaseNotes: (data['body'] as String?)?.trim() ?? '',
+    );
   }
 
   bool _isNewer(String latest, String current) {

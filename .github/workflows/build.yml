@@ -55,7 +55,7 @@ jobs:
         working-directory: flutter_app
 
       - name: Install CocoaPods dependencies
-        run: pod install --repo-update
+        run: pod install
         working-directory: flutter_app/ios
 
       - name: Build iOS app (no codesign)

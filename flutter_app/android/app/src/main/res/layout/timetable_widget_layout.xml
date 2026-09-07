@@ -25,30 +25,16 @@
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/widget_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="13dp"
-                android:layout_height="13dp"
-                android:layout_marginEnd="5dp"
-                android:src="@drawable/ic_schedule"
-                android:contentDescription="@null" />
-
-            <TextView
-                android:id="@+id/widget_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Plan Mechanika"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textAllCaps="true"
-                android:letterSpacing="0.04"
-                android:textColor="@color/widget_accent" />
-        </LinearLayout>
+            android:text="Plan Mechanika"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:letterSpacing="0.04"
+            android:textColor="@color/widget_accent" />
 
         <TextView
             android:id="@+id/widget_subject"

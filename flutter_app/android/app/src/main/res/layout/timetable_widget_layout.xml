@@ -6,8 +6,10 @@
     android:orientation="horizontal"
     android:background="@drawable/widget_background">
 
-    <!-- Accent bar, rounded to match the card's left edge. -->
-    <View
+    <!-- Accent bar, rounded to match the card's left edge. Plain <View> is
+         rejected by RemoteViews ("Class not allowed to be inflated"), so
+         this uses FrameLayout, which is on RemoteViews' supported list. -->
+    <FrameLayout
         android:layout_width="4dp"
         android:layout_height="match_parent"
         android:background="@drawable/widget_accent_bar" />

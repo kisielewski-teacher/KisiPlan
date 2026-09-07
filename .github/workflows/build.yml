@@ -1,4 +1,4 @@
-name: Build APK & IPA
+name: Build APK
 
 on:
   push:
@@ -38,41 +38,6 @@ jobs:
         with:
           name: Kisiplan-apk
           path: Kisiplan.apk
-
-  build-ipa:
-    name: Build iOS IPA
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.44.2'
-          channel: stable
-
-      - name: Get dependencies
-        run: flutter pub get
-        working-directory: flutter_app
-
-      - name: Install CocoaPods dependencies
-        run: pod install
-        working-directory: flutter_app/ios
-
-      - name: Build iOS app (no codesign)
-        run: flutter build ios --no-codesign --release
-        working-directory: flutter_app
-
-      - name: Package as IPA
-        run: |
-          mkdir -p Payload
-          cp -r flutter_app/build/ios/iphoneos/Runner.app Payload/
-          zip -r Kisiplan.ipa Payload/
-          rm -rf Payload
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Kisiplan-ipa
-          path: Kisiplan.ipa
 
   release:
     name: Publish GitHub Release

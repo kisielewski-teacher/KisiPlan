@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UpdateInfo {
   final String version;
@@ -27,9 +28,15 @@ class UpdateService {
   static const _repo = 'KisiPlan';
   static const _channel = MethodChannel('com.example.kisiplan/installer');
 
+  static const _prefsLastChecked = 'update_last_checked_epoch_ms';
+  static const _prefsVersion = 'update_cached_version';
+  static const _prefsUrl = 'update_cached_url';
+  static const _prefsNotes = 'update_cached_notes';
+
   /// Returns update info if a newer version is published on GitHub, or null
   /// if the check succeeded but there's genuinely nothing newer (or the
-  /// release has no APK asset attached).
+  /// release has no APK asset attached). Persists the result so [cachedUpdate]
+  /// and [checkForUpdateThrottled] can reflect it without another request.
   ///
   /// Throws on failure (offline, GitHub API rate limit, malformed response,
   /// ...) instead of swallowing it — callers that run silently in the
@@ -67,7 +74,10 @@ class UpdateService {
 
     final tag = (data['tag_name'] as String?) ?? '';
     final latestVersion = tag.startsWith('v') ? tag.substring(1) : tag;
-    if (latestVersion.isEmpty) return null;
+    if (latestVersion.isEmpty) {
+      await _cacheResult(null);
+      return null;
+    }
 
     final assets = (data['assets'] as List?) ?? [];
     String? downloadUrl;
@@ -79,16 +89,70 @@ class UpdateService {
         break;
       }
     }
-    if (downloadUrl == null) return null;
+    if (downloadUrl == null) {
+      await _cacheResult(null);
+      return null;
+    }
 
     final currentVersion = (await PackageInfo.fromPlatform()).version;
-    if (!_isNewer(latestVersion, currentVersion)) return null;
+    if (!_isNewer(latestVersion, currentVersion)) {
+      await _cacheResult(null);
+      return null;
+    }
 
-    return UpdateInfo(
+    final info = UpdateInfo(
       version: latestVersion,
       downloadUrl: downloadUrl,
       releaseNotes: (data['body'] as String?)?.trim() ?? '',
     );
+    await _cacheResult(info);
+    return info;
+  }
+
+  /// Checks for an update at most once every [interval] (default 3 days) to
+  /// stay well under GitHub's unauthenticated API rate limit. Between real
+  /// checks, returns the last known result from cache instantly. Never
+  /// throws — a failed background check just falls back to whatever was
+  /// last known, and doesn't advance the "last checked" time so the next
+  /// launch retries instead of waiting out the full interval.
+  Future<UpdateInfo?> checkForUpdateThrottled({Duration interval = const Duration(days: 3)}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastCheckedMs = prefs.getInt(_prefsLastChecked);
+    final dueForCheck = lastCheckedMs == null ||
+        DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(lastCheckedMs)) >= interval;
+
+    if (!dueForCheck) {
+      return cachedUpdate();
+    }
+
+    try {
+      return await checkForUpdate();
+    } catch (_) {
+      return cachedUpdate();
+    }
+  }
+
+  /// The last known update state without touching the network.
+  Future<UpdateInfo?> cachedUpdate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final version = prefs.getString(_prefsVersion);
+    final url = prefs.getString(_prefsUrl);
+    if (version == null || url == null) return null;
+    return UpdateInfo(version: version, downloadUrl: url, releaseNotes: prefs.getString(_prefsNotes) ?? '');
+  }
+
+  Future<void> _cacheResult(UpdateInfo? info) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsLastChecked, DateTime.now().millisecondsSinceEpoch);
+    if (info == null) {
+      await prefs.remove(_prefsVersion);
+      await prefs.remove(_prefsUrl);
+      await prefs.remove(_prefsNotes);
+    } else {
+      await prefs.setString(_prefsVersion, info.version);
+      await prefs.setString(_prefsUrl, info.downloadUrl);
+      await prefs.setString(_prefsNotes, info.releaseNotes);
+    }
   }
 
   bool _isNewer(String latest, String current) {

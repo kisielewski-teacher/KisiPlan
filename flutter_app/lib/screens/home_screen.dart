@@ -69,6 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final NotificationService _notificationService = NotificationService();
   final UpdateService _updateService = UpdateService();
   final WidgetService _widgetService = WidgetService();
+  // null = not checked yet this session, true = update pending, false = up to date.
+  bool? _updateAvailable;
   List<Lesson> _todayLessons = [];
   Map<String, List<Lesson>> _weekTimetable = {};
   _ScheduleBlock? _currentBlock;
@@ -144,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadTimetable();
-    _checkForUpdateSilently();
+    _refreshUpdateIndicator();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = DateTime.now();
       setState(() {
@@ -195,15 +197,19 @@ class _HomeScreenState extends State<HomeScreen> {
     await widget.onLogout();
   }
 
-  Future<void> _checkForUpdateSilently() async {
-    try {
-      final update = await _updateService.checkForUpdate();
-      if (update == null || !mounted) return;
-      _showUpdateDialog(update);
-    } catch (_) {
-      // Silent background check — a transient failure (offline, GitHub
-      // rate limit, ...) shouldn't interrupt the user; it'll try again
-      // next time the app opens.
+  /// Colors the update icon from cache immediately, then — at most once
+  /// every few days (see UpdateService.checkForUpdateThrottled) — does a
+  /// real check, refreshes the icon and, if something new turned up,
+  /// reminds the user with the update dialog.
+  Future<void> _refreshUpdateIndicator() async {
+    final cached = await _updateService.cachedUpdate();
+    if (mounted) setState(() => _updateAvailable = cached != null);
+
+    final result = await _updateService.checkForUpdateThrottled();
+    if (!mounted) return;
+    setState(() => _updateAvailable = result != null);
+    if (result != null) {
+      _showUpdateDialog(result);
     }
   }
 
@@ -212,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final update = await _updateService.checkForUpdate();
       if (!mounted) return;
+      setState(() => _updateAvailable = update != null);
       if (update == null) {
         messenger.showSnackBar(
           const SnackBar(content: Text('Masz już najnowszą wersję aplikacji.')),
@@ -301,8 +308,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.system_update),
-            tooltip: 'Sprawdź aktualizacje',
+            icon: Icon(
+              Icons.system_update,
+              color: _updateAvailable == true
+                  ? Colors.redAccent
+                  : _updateAvailable == false
+                      ? Colors.greenAccent
+                      : null,
+            ),
+            tooltip: _updateAvailable == true
+                ? 'Dostępna jest nowa wersja'
+                : 'Sprawdź aktualizacje',
             onPressed: _checkForUpdateManually,
           ),
           IconButton(

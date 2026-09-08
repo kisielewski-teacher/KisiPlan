@@ -27,13 +27,19 @@ class WidgetService {
     if (current != null) {
       status = 'Teraz';
       subject = current.subject;
-      details = '${current.startString}-${current.endString}'
-          '${current.room.isNotEmpty ? " · sala ${current.room}" : ""}';
+      details = [
+        '${current.startString}-${current.endString}',
+        if (current.room.isNotEmpty) 'sala ${current.room}',
+        if (current.className.isNotEmpty) current.className,
+      ].join(' · ');
     } else if (next != null) {
       status = 'Następnie';
       subject = next.subject;
-      details = 'od ${next.startString}'
-          '${next.room.isNotEmpty ? " · sala ${next.room}" : ""}';
+      details = [
+        'od ${next.startString}',
+        if (next.room.isNotEmpty) 'sala ${next.room}',
+        if (next.className.isNotEmpty) next.className,
+      ].join(' · ');
     } else {
       status = 'Plan Mechanika';
       subject = 'Brak lekcji';

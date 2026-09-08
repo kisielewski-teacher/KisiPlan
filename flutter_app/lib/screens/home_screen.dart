@@ -95,6 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return wd >= 1 && wd <= 5 ? keys[wd] : '';
   }
 
+  bool get _currentIsFreeWindow =>
+      _currentBlock != null && !_currentBlock!.isBreak && (_currentBlock!.lesson?.isCancelled ?? false);
+
   bool get _schoolDone {
     if (_todayLessons.isEmpty) return false;
     final nowSeconds = _now.hour * 3600 + _now.minute * 60 + _now.second;
@@ -497,6 +500,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 4),
+                  _buildTag('Okienko', Colors.blueGrey, compact: compact),
                 ],
               )
             : lesson.isSubstitution && lesson.originalSubject != null
@@ -526,6 +531,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(fontSize: compact ? 13 : 14),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      _buildTag('Zastępstwo', Colors.green, compact: compact),
                     ],
                   ),
                 ],
@@ -587,6 +594,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               )
             : _roomTrailing('sala ${lesson.room}', compact: compact),
+      ),
+    );
+  }
+
+  /// A small colored badge, styled after the "zastępstwo"/"nieobecność"
+  /// annotations shown next to lessons in Librus.
+  Widget _buildTag(String label, MaterialColor color, {bool compact = false}) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color.shade700,
+          fontWeight: FontWeight.w600,
+          fontSize: compact ? 9 : 10,
+        ),
       ),
     );
   }
@@ -691,12 +718,16 @@ class _HomeScreenState extends State<HomeScreen> {
           if (!_schoolDone && _currentBlock != null) ...[
             const SizedBox(height: 20),
             Text(
-              _currentBlock!.isBreak ? 'Teraz trwa:' : 'Teraz masz:',
+              _currentBlock!.isBreak || _currentIsFreeWindow ? 'Teraz trwa:' : 'Teraz masz:',
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 6),
             Text(
-              _currentBlock!.isBreak ? 'Przerwa' : _currentBlock!.lesson!.subject,
+              _currentBlock!.isBreak
+                  ? 'Przerwa'
+                  : _currentIsFreeWindow
+                      ? 'Okienko'
+                      : _currentBlock!.lesson!.subject,
               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
@@ -707,13 +738,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: const TextStyle(fontSize: 20, color: Colors.grey),
                 textAlign: TextAlign.center,
               )
+            else if (_currentIsFreeWindow)
+              Text(
+                'Odwołano: ${_currentBlock!.lesson!.subject}'
+                '${_currentBlock!.lesson!.className.isNotEmpty ? ' (${_currentBlock!.lesson!.className})' : ''}',
+                style: const TextStyle(fontSize: 18, color: Colors.grey),
+                textAlign: TextAlign.center,
+              )
             else
               Text(
                 'Sala ${_currentBlock!.lesson!.room}',
                 style: const TextStyle(fontSize: 20, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
-            if (!_currentBlock!.isBreak && _currentBlock!.lesson!.className.isNotEmpty) ...[
+            if (!_currentBlock!.isBreak && !_currentIsFreeWindow && _currentBlock!.lesson!.className.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(
                 _currentBlock!.lesson!.className,

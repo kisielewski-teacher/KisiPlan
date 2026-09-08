@@ -2347,12 +2347,14 @@ class TimetableService {
         room = cellText; // location used as "room"
         className = '';
       } else if (isStruckThrough) {
-        // First <div class="text"> has <s> (cancelled), second (if present)
-        // has the new lesson replacing it.
+        // First <div class="text"> holds the cancelled lesson, second (if
+        // present) holds the new lesson replacing it (a "zastępstwo"). The
+        // <s> strike itself may sit inside the first div OR wrap both divs
+        // as their common ancestor, so its exact position can't be used to
+        // decide whether a replacement exists — only the div count can.
         final textDivs = cell.querySelectorAll('div.text');
-        final firstHasStrike = textDivs.isNotEmpty && textDivs[0].querySelector('s') != null;
 
-        if (textDivs.length >= 2 && firstHasStrike) {
+        if (textDivs.length >= 2) {
           isSubstitution = true;
           final origText = textDivs[0].text.trim();
           originalSubject = textDivs[0].querySelector('b')?.text.trim() ?? '';

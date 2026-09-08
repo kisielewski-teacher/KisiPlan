@@ -1,0 +1,86 @@
+PLAN MECHANIKA — INSTRUKCJA DO WSTAWIENIA NA mechanik.slupsk.pl
+==================================================================
+
+W tej paczce jest jeden plik:
+
+    plan-mechanika-instrukcja.html
+
+To gotowa, kompletna strona z instrukcją instalacji i obsługi aplikacji
+"Plan Mechanika" — kolory, czcionki (Barlow Condensed + Manrope) i styl
+dobrane tak, żeby pasowały do wyglądu mechanik.slupsk.pl. Wszystkie obrazki
+(logo, zrzuty ekranu) są zapisane wewnątrz tego jednego pliku — nie trzeba
+nigdzie osobno wgrywać żadnych zdjęć.
+
+Strona ma bezpieczny "namiot" (#pm-manual) wokół całej treści, więc jej
+style nie powinny wpłynąć na resztę strony WordPress.
+
+
+NAJPROSTSZY SPOSÓB — Divi Builder, moduł "Kod" (macie Divi na tej stronie)
+---------------------------------------------------------------------------
+
+1. Zaloguj się do panelu WordPress (mechanik.slupsk.pl/wp-admin).
+
+2. Utwórz nową stronę: Strony -> Dodaj nową. Nadaj jej tytuł,
+   np. "Plan Mechanika — instrukcja".
+
+3. Włącz edycję w Divi Builder (przycisk "Buduj z Divi" / "Use Divi
+   Builder").
+
+4. Dodaj nowy moduł: kliknij "+", wpisz w wyszukiwarce modułów "Kod"
+   (albo "Code") i wybierz go.
+
+5. Otwórz plik plan-mechanika-instrukcja.html w Notatniku (klik prawym
+   -> Otwórz za pomocą -> Notatnik), zaznacz całość (Ctrl+A) i skopiuj
+   (Ctrl+C).
+
+6. Wklej całą zawartość (Ctrl+V) do pola tekstowego modułu "Kod" w Divi.
+
+7. Zapisz moduł, zapisz stronę, opublikuj.
+
+8. Otwórz podgląd strony i sprawdź, czy wszystko wygląda dobrze —
+   szczególnie na telefonie (to strona w pełni responsywna).
+
+
+ALTERNATYWA — zwykły edytor WordPress (blokowy)
+--------------------------------------------------
+
+1. Strony -> Dodaj nową.
+
+2. Dodaj blok "Kod HTML" (Custom HTML) — kliknij "+", wyszukaj
+   "Kod HTML".
+
+3. Wklej do niego całą zawartość pliku plan-mechanika-instrukcja.html
+   (tak jak w kroku 5-6 wyżej).
+
+4. Opublikuj i sprawdź podgląd.
+
+
+DODANIE DO MENU STRONY
+--------------------------
+
+Po opublikowaniu strony można dodać do niej link w głównym menu:
+Wygląd -> Menu -> wybierz nową stronę z listy po lewej -> "Dodaj do
+menu" -> przeciągnij w odpowiednie miejsce -> Zapisz menu.
+
+Sugerowane miejsce w istniejącym menu: obok "UCZNIOWIE" albo jako pozycja
+w podmenu "UCZNIOWIE" / "DOKUMENTY", skoro dotyczy uczniów i nauczycieli.
+
+
+AKTUALIZACJA WERSJI W PRZYSZŁOŚCI
+-------------------------------------
+
+Strona pokazuje aktualny numer wersji aplikacji w górnym pasku
+("Aktualna wersja vX.X.X"). Gdy wyjdzie nowa wersja, wystarczy poprosić
+o świeży plik .html (z zaktualizowanym numerem) i podmienić całą
+zawartość modułu "Kod" tak samo jak przy pierwszym wstawianiu — nie
+trzeba nic innego zmieniać.
+
+
+PYTANIA
+----------
+
+Jeżeli coś nie wyświetla się poprawnie po wklejeniu (np. czcionki się nie
+ładują, kolory wyglądają inaczej) — to zwykle znaczy, że motyw WordPress
+"obcina" albo nadpisuje pewne style w module Kod. W takim wypadku najlepiej
+przesłać zrzut ekranu z problemem, żeby można było dopasować CSS pod
+konkretny motyw.

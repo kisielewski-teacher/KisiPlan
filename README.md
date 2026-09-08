@@ -131,10 +131,12 @@ Po pierwszym otwarciu aplikacji pojawi się ekran logowania.
 Po zalogowaniu wyświetla się ekran główny z następującymi elementami:
 
 **Na górze:**
+
 - aktualna godzina i data
 - informacja o tym, co teraz trwa
 
 **Stan aktualny może wyglądać tak:**
+
 - `Teraz masz: Matematyka – sala 201` — trwa lekcja, z odliczaniem czasu do końca
 - `Przerwa – jeszcze 3 min` — trwa przerwa, z informacją o następnej lekcji
 - `Zajęcia zakończone` — na dziś nie ma już lekcji
@@ -201,6 +203,7 @@ Aplikacja automatycznie zapisuje ostatnio pobrany plan lokalnie na telefonie.
 Jeśli przy uruchomieniu nie uda się połączyć z Librusem (brak internetu, przerwa techniczna), aplikacja wyświetli **ostatnio zapisany plan** z informacją, że dane mogą być nieaktualne.
 
 Oznacza to, że:
+
 - aplikacja działa nawet bez internetu
 - zapisany plan może nie uwzględniać ostatnich zmian (zastępstw, odwołanych lekcji)
 - po przywróceniu połączenia warto nacisnąć przycisk odświeżania

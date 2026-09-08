@@ -489,6 +489,46 @@
     color:var(--navy-2);
   }
 
+  /* ---------- download CTA ---------- */
+  #pm-manual .download-cta{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    margin:14px 0;
+    padding:16px 18px;
+    background:var(--tint-current);
+    border:1px solid var(--tint-current-line);
+    border-radius:3px;
+  }
+  #pm-manual .download-cta-text{flex:1 1 300px; min-width:220px;}
+  #pm-manual .download-cta-file{
+    font-weight:800;
+    margin-bottom:3px;
+  }
+  #pm-manual .download-cta-size{
+    font-weight:500;
+    color:var(--ink-soft);
+    font-size:0.92em;
+  }
+  #pm-manual .download-cta p{margin:0; color:var(--ink-soft); font-size:14px;}
+  #pm-manual .btn-download{
+    flex:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:.65em 1.4em;
+    border-radius:3px;
+    background:var(--blue);
+    color:#fff;
+    font-weight:700;
+    font-size:15px;
+    text-decoration:none;
+    transition:background .15s;
+  }
+  #pm-manual .btn-download svg{width:17px;height:17px;}
+  #pm-manual .btn-download:hover{background:var(--navy-2);}
+
   /* ---------- support / "postaw kawę" ---------- */
   #pm-manual .support{
     background:var(--panel-2);
@@ -601,8 +641,8 @@
           Aktualna wersja <b>v1.4.12</b>
         </span>
         <span class="chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"></path></svg>
-          Źródło: <a href="https://github.com/kisielewski-teacher/KisiPlan" target="_blank" rel="noopener" style="color:#fff">GitHub (publiczne)</a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <a href="https://mechanik.slupsk.pl/TU-WSTAW-LINK-DO-PLIKU-APK" target="_blank" rel="noopener" style="color:#fff">Pobierz aplikację (APK)</a>
         </span>
       </div>
     </div>
@@ -641,7 +681,7 @@
       <span class="tag">Część A</span>
       <h2>Instalacja na telefonie</h2>
     </div>
-    <p class="part-intro">Aplikacja nie jest publikowana w Sklepie Play — instaluje się ją z pliku APK pobranego bezpośrednio z repozytorium na GitHubie. To dziesięć minut roboty, głównie kliknięć „Dalej”.</p>
+    <p class="part-intro">Aplikacja nie jest publikowana w Sklepie Play — instaluje się ją z pliku APK pobranego bezpośrednio z tej strony. To dziesięć minut roboty, głównie kliknięć „Dalej”.</p>
 
     <section class="sec" id="a1">
       <h3><span class="code">A1</span>Wymagania</h3>
@@ -655,17 +695,17 @@
 
     <section class="sec" id="a2">
       <h3><span class="code">A2</span>Pobranie pliku APK</h3>
-      <p>Najnowsza wersja jest zawsze dostępna jako <b>Release</b> w publicznym repozytorium na GitHubie.</p>
-      <ol class="steps">
-        <li>
-          <div class="step-title">Otwórz na telefonie stronę wydań</div>
-          <p><a href="https://github.com/kisielewski-teacher/KisiPlan/releases/latest" target="_blank" rel="noopener">github.com/kisielewski-teacher/KisiPlan/releases/latest</a></p>
-        </li>
-        <li>
-          <div class="step-title">Pobierz plik <span class="field">PlanMechanika.apk</span></div>
-          <p>Znajduje się w sekcji „Assets” najnowszego wydania. Przeglądarka zapisze go w folderze <span class="field">Pobrane</span>.</p>
-        </li>
-      </ol>
+      <p>Plik instalacyjny jest hostowany bezpośrednio na stronie szkoły — nie trzeba niczego szukać na zewnętrznych serwisach.</p>
+      <div class="download-cta">
+        <div class="download-cta-text">
+          <div class="download-cta-file"><span class="field">PlanMechanika.apk</span> <span class="download-cta-size">~60 MB</span></div>
+          <p>Kliknij przycisk, żeby pobrać najnowszą wersję. Przeglądarka zapisze plik w folderze <span class="field">Pobrane</span>.</p>
+        </div>
+        <a class="btn-download" href="https://mechanik.slupsk.pl/TU-WSTAW-LINK-DO-PLIKU-APK" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Pobierz aplikację
+        </a>
+      </div>
     </section>
 
     <section class="sec" id="a3">

@@ -1,22 +1,56 @@
 PLAN MECHANIKA — INSTRUKCJA DO WSTAWIENIA NA mechanik.slupsk.pl
 ==================================================================
 
-W tej paczce jest jeden plik:
+W tej paczce są dwa pliki:
 
-    plan-mechanika-instrukcja.html
-
-To gotowa, kompletna strona z instrukcją instalacji i obsługi aplikacji
-"Plan Mechanika" — kolory, czcionki (Barlow Condensed + Manrope) i styl
-dobrane tak, żeby pasowały do wyglądu mechanik.slupsk.pl. Wszystkie obrazki
-(logo, zrzuty ekranu) są zapisane wewnątrz tego jednego pliku — nie trzeba
-nigdzie osobno wgrywać żadnych zdjęć.
+    plan-mechanika-instrukcja.html   — gotowa strona z instrukcją
+    PlanMechanika.apk                 — aplikacja do pobrania przez uczniów/nauczycieli
 
 Strona ma bezpieczny "namiot" (#pm-manual) wokół całej treści, więc jej
-style nie powinny wpłynąć na resztę strony WordPress.
+style nie powinny wpłynąć na resztę strony WordPress. Wszystkie obrazki
+(logo, zrzuty ekranu) są zapisane wewnątrz pliku .html — nie trzeba
+osobno wgrywać żadnych zdjęć, TYLKO sam plik .apk (patrz krok 0 poniżej).
 
 
-NAJPROSTSZY SPOSÓB — Divi Builder, moduł "Kod" (macie Divi na tej stronie)
----------------------------------------------------------------------------
+KROK 0 — NAJPIERW WGRAJ PLIK PlanMechanika.apk DO MEDIÓW
+--------------------------------------------------------------
+
+Aplikacja nie jest publikowana w Sklepie Play — użytkownicy pobierają ją
+bezpośrednio z tej strony, więc plik .apk musi tam fizycznie leżeć.
+
+1. W panelu WordPress: Media -> Dodaj nowy (Add New).
+
+2. Przeciągnij plik PlanMechanika.apk z tej paczki (albo kliknij
+   "Wybierz pliki" i go wskaż).
+
+   Uwaga: WordPress czasem blokuje wgrywanie plików .apk jako "niedozwolony
+   typ pliku". Jeśli tak się stanie, dwa wyjścia:
+     a) poprosić administratora hostingu / motywu o dodanie rozszerzenia
+        "apk" do dozwolonych typów plików (filtr upload_mimes w WordPressie),
+     b) albo wgrać plik przez FTP/menedżer plików hostingu wprost do
+        wp-content/uploads/, a potem w Mediach kliknąć "Dodaj nowy" ->
+        wpisać ręcznie URL, jeśli panel na to pozwala.
+
+3. Po wgraniu kliknij na plik w bibliotece Mediów i skopiuj jego
+   "Adres URL pliku" (Link do pliku) — będzie wyglądał mniej więcej tak:
+
+       https://mechanik.slupsk.pl/wp-content/uploads/2026/09/PlanMechanika.apk
+
+4. Otwórz plan-mechanika-instrukcja.html w Notatniku, wciśnij Ctrl+H
+   (Znajdź i zamień), w polu "Znajdź" wpisz:
+
+       https://mechanik.slupsk.pl/TU-WSTAW-LINK-DO-PLIKU-APK
+
+   a w polu "Zamień na" wklej swój prawdziwy link z kroku 3. Kliknij
+   "Zamień wszystko" (link występuje w dwóch miejscach na stronie —
+   w górnym pasku i w sekcji A2). Zapisz plik (Ctrl+S).
+
+   Można też po prostu podesłać gotowy link do pliku, a podmiana
+   zostanie zrobiona automatycznie.
+
+
+NAJPROSTSZY SPOSÓB WSTAWIENIA STRONY — Divi Builder, moduł "Kod"
+---------------------------------------------------------------------
 
 1. Zaloguj się do panelu WordPress (mechanik.slupsk.pl/wp-admin).
 
@@ -29,16 +63,16 @@ NAJPROSTSZY SPOSÓB — Divi Builder, moduł "Kod" (macie Divi na tej stronie)
 4. Dodaj nowy moduł: kliknij "+", wpisz w wyszukiwarce modułów "Kod"
    (albo "Code") i wybierz go.
 
-5. Otwórz plik plan-mechanika-instrukcja.html w Notatniku (klik prawym
-   -> Otwórz za pomocą -> Notatnik), zaznacz całość (Ctrl+A) i skopiuj
-   (Ctrl+C).
+5. Otwórz (już podmieniony w kroku 0) plik plan-mechanika-instrukcja.html
+   w Notatniku, zaznacz całość (Ctrl+A) i skopiuj (Ctrl+C).
 
 6. Wklej całą zawartość (Ctrl+V) do pola tekstowego modułu "Kod" w Divi.
 
 7. Zapisz moduł, zapisz stronę, opublikuj.
 
-8. Otwórz podgląd strony i sprawdź, czy wszystko wygląda dobrze —
-   szczególnie na telefonie (to strona w pełni responsywna).
+8. Otwórz podgląd strony i sprawdź, czy wszystko wygląda dobrze, a przycisk
+   "Pobierz aplikację" faktycznie pobiera plik .apk — szczególnie sprawdź
+   na telefonie (to strona w pełni responsywna).
 
 
 ALTERNATYWA — zwykły edytor WordPress (blokowy)
@@ -84,10 +118,17 @@ AKTUALIZACJA WERSJI W PRZYSZŁOŚCI
 -------------------------------------
 
 Strona pokazuje aktualny numer wersji aplikacji w górnym pasku
-("Aktualna wersja vX.X.X"). Gdy wyjdzie nowa wersja, wystarczy poprosić
-o świeży plik .html (z zaktualizowanym numerem) i podmienić całą
-zawartość modułu "Kod" tak samo jak przy pierwszym wstawianiu — nie
-trzeba nic innego zmieniać.
+("Aktualna wersja vX.X.X"). Gdy wyjdzie nowa wersja, trzeba:
+
+1. Wgrać nowy plik PlanMechanika.apk do Mediów (krok 0) — najlepiej
+   usunąć/podmienić poprzedni, żeby nie zaśmiecać biblioteki, albo
+   nadpisać pod tym samym adresem, jeśli hosting na to pozwala.
+2. Podmienić całą zawartość modułu "Kod" na świeżą wersję pliku .html
+   (z zaktualizowanym numerem wersji i, jeśli trzeba, nowym linkiem
+   do pliku .apk).
+
+Nie trzeba nic innego zmieniać — sam plik .apk zawsze aktualizuje
+zainstalowaną aplikację w miejscu, bez utraty zapisanej sesji.
 
 
 PYTANIA

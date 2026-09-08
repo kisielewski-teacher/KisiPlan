@@ -450,6 +450,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildLessonCard(Lesson lesson, {bool compact = false}) {
     final isCurrent = identical(_currentBlock?.lesson, lesson) && !(_currentBlock?.isBreak ?? false);
+    // A full substitution shows both the cancelled original and its
+    // replacement, so it gets a custom two-row layout (see below) instead
+    // of ListTile's title/subtitle/trailing, which can't keep a multi-line
+    // left side lined up against the room text on the right.
+    final isFullSubstitution =
+        lesson.isSubstitution && !lesson.isDuty && (lesson.originalSubject?.isNotEmpty ?? false);
+
     Color? cardColor;
     if (isCurrent) {
       cardColor = Colors.blue.shade50;
@@ -481,6 +488,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(fontSize: compact ? 13 : 14),
                     ),
                   ),
+                  if (lesson.isSubstitution) ...[
+                    const SizedBox(width: 4),
+                    _buildTag('Zastępstwo', Colors.green, compact: compact),
+                  ],
                 ],
               )
             : lesson.isCancelled
@@ -504,35 +515,84 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildTag('Okienko', Colors.blueGrey, compact: compact),
                 ],
               )
-            : lesson.isSubstitution && lesson.originalSubject != null
+            : isFullSubstitution
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    lesson.originalSubject!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey,
-                      fontSize: compact ? 11 : 13,
-                    ),
-                  ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.swap_horiz, size: 15, color: Colors.orange),
-                      const SizedBox(width: 4),
                       Expanded(
-                        child: Text(
-                          lesson.subject,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: compact ? 13 : 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              lesson.originalSubject!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                color: Colors.grey,
+                                fontSize: compact ? 11 : 13,
+                              ),
+                            ),
+                            if ((lesson.originalClassName ?? '').isNotEmpty)
+                              Text(
+                                lesson.originalClassName!,
+                                style: TextStyle(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: Colors.grey,
+                                  fontSize: compact ? 10 : 12,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      _buildTag('Zastępstwo', Colors.green, compact: compact),
+                      if ((lesson.originalRoom ?? '').isNotEmpty)
+                        _roomTrailing(
+                          'sala ${lesson.originalRoom}',
+                          compact: compact,
+                          strikeThrough: true,
+                          fontSize: compact ? 10 : 12,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.swap_horiz, size: 15, color: Colors.orange),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    lesson.subject,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: compact ? 13 : 14),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                _buildTag('Zastępstwo', Colors.green, compact: compact),
+                              ],
+                            ),
+                            if (lesson.className.isNotEmpty)
+                              Text(
+                                lesson.className,
+                                style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey),
+                              ),
+                          ],
+                        ),
+                      ),
+                      _roomTrailing('sala ${lesson.room}', compact: compact),
                     ],
                   ),
                 ],
@@ -543,7 +603,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: compact ? 13 : 14),
               ),
-        subtitle: lesson.isCancelled
+        subtitle: isFullSubstitution
+            ? null
+            : lesson.isCancelled
             ? (lesson.className.isNotEmpty
                 ? Text(
                     lesson.className,
@@ -554,45 +616,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : null)
-            : lesson.isSubstitution && lesson.originalClassName != null
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (lesson.originalClassName!.isNotEmpty)
-                    Text(
-                      lesson.originalClassName!,
-                      style: TextStyle(
-                        decoration: TextDecoration.lineThrough,
-                        color: Colors.grey,
-                        fontSize: compact ? 10 : 12,
-                      ),
-                    ),
-                  if (lesson.className.isNotEmpty)
-                    Text(lesson.className, style: TextStyle(fontSize: compact ? 10 : 12)),
-                ],
-              )
             : lesson.className.isNotEmpty
                 ? Text(lesson.className, style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey))
                 : null,
-        trailing: lesson.isDuty
+        trailing: isFullSubstitution
+            ? null
+            : lesson.isDuty
             ? _roomTrailing(lesson.room, compact: compact)
             : lesson.isCancelled
             ? _roomTrailing('sala ${lesson.room}', compact: compact, strikeThrough: true)
-            : lesson.isSubstitution && lesson.originalRoom != null
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _roomTrailing(
-                    'sala ${lesson.originalRoom}',
-                    compact: compact,
-                    strikeThrough: true,
-                    fontSize: compact ? 11 : 13,
-                  ),
-                  _roomTrailing('sala ${lesson.room}', compact: compact),
-                ],
-              )
             : _roomTrailing('sala ${lesson.room}', compact: compact),
       ),
     );

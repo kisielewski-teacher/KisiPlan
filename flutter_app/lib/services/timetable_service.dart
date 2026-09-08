@@ -2346,6 +2346,10 @@ class TimetableService {
         subject = 'Dyżur';
         room = cellText; // location used as "room"
         className = '';
+        isSubstitution = rowCells.any(
+          (c) => c.text.toLowerCase().contains('zastępstwo') ||
+              c.text.toLowerCase().contains('zastepstwo'),
+        );
       } else if (isStruckThrough) {
         // First <div class="text"> holds the cancelled lesson, second (if
         // present) holds the new lesson replacing it (a "zastępstwo"). The
@@ -2426,6 +2430,12 @@ class TimetableService {
       final key = '$dayKey|$timeFrom|$timeTo|dyżur|${location.toLowerCase()}|';
       if (!seen.add(key)) continue;
 
+      final rowCells = cell.parent?.querySelectorAll('td') ?? [];
+      final isSubstitutionDuty = rowCells.any(
+        (c) => c.text.toLowerCase().contains('zastępstwo') ||
+            c.text.toLowerCase().contains('zastepstwo'),
+      );
+
       result[dayKey]!.add(Lesson.fromJson({
         'start': timeFrom,
         'end': timeTo,
@@ -2433,6 +2443,7 @@ class TimetableService {
         'room': location,
         'className': '',
         'isDuty': true,
+        'isSubstitution': isSubstitutionDuty,
       }));
       dutyCellsParsed++;
 
@@ -2462,6 +2473,11 @@ class TimetableService {
       final key = '$dayKey|$timeFrom|$timeTo|dyżur|${location.toLowerCase()}|';
       if (!seen.add(key)) continue;
 
+      final isSubstitutionDuty = cols.any(
+        (c) => c.text.toLowerCase().contains('zastępstwo') ||
+            c.text.toLowerCase().contains('zastepstwo'),
+      );
+
       result[dayKey]!.add(Lesson.fromJson({
         'start': timeFrom,
         'end': timeTo,
@@ -2469,6 +2485,7 @@ class TimetableService {
         'room': location,
         'className': '',
         'isDuty': true,
+        'isSubstitution': isSubstitutionDuty,
       }));
       dutyRowsParsed++;
 

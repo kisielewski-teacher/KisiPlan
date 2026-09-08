@@ -22,10 +22,10 @@ Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i n
 
 ### Wymagania systemowe
 
-| Platforma | Minimalna wersja |
-|-----------|-----------------|
+| Platforma | Minimalna wersja                |
+|-----------|---------------------------------|
 | Android   | Android 6.0 (API 23) lub nowszy |
-| iOS       | iOS 12.0 lub nowszy |
+| iOS       | iOS 12.0 lub nowszy             |
 
 ### Wymagania do działania
 
@@ -147,13 +147,13 @@ Po zalogowaniu wyświetla się ekran główny z następującymi elementami:
 
 Poniżej sekcji aktualnego stanu wyświetla się lista wszystkich wpisów na dziś:
 
-| Typ wpisu | Wygląd |
-|-----------|--------|
-| Lekcja | karta z nazwą przedmiotu, salą i godziną |
-| Aktywna lekcja | karta wyróżniona kolorem |
-| Zastępstwo | karta z oznaczeniem i oryginalnym przedmiotem |
-| Dyżur (nauczyciel) | karta z miejscem dyżuru |
-| Przerwa | blok z zakresem godzin |
+| Typ wpisu          | Wygląd                                        |
+|--------------------|-----------------------------------------------|
+| Lekcja             | karta z nazwą przedmiotu, salą i godziną      |
+| Aktywna lekcja     | karta wyróżniona kolorem                      |
+| Zastępstwo         | karta z oznaczeniem i oryginalnym przedmiotem |
+| Dyżur (nauczyciel) | karta z miejscem dyżuru                       |
+| Przerwa            | blok z zakresem godzin                        |
 
 ---
 
@@ -179,12 +179,12 @@ Obok przycisku odświeżania znajduje się przycisk **wylogowania**. Po wylogowa
 
 Aplikacja może wysyłać powiadomienia o ważnych momentach dnia:
 
-| Powiadomienie | Opis |
-|---------------|------|
-| Poranek | Przypomnienie przed pierwszą lekcją |
-| Koniec przerwy | Alert, że przerwa zaraz się kończy |
-| Dyżur | Informacja o miejscu dyżuru (nauczyciel) |
-| Koniec zajęć | Komunikat o zakończeniu lekcji na dziś |
+| Powiadomienie  | Opis                                     |
+|----------------|------------------------------------------|
+| Poranek        | Przypomnienie przed pierwszą lekcją      |
+| Koniec przerwy | Alert, że przerwa zaraz się kończy       |
+| Dyżur          | Informacja o miejscu dyżuru (nauczyciel) |
+| Koniec zajęć   | Komunikat o zakończeniu lekcji na dziś   |
 
 **Włączanie powiadomień:**
 

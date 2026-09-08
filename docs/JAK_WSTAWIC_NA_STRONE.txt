@@ -55,22 +55,18 @@ ALTERNATYWA — zwykły edytor WordPress (blokowy)
 4. Opublikuj i sprawdź podgląd.
 
 
-ZANIM OPUBLIKUJESZ — PODMIEŃ LINK "POSTAW MI KAWĘ"
--------------------------------------------------------
+SEKCJA "POSTAW MI KAWĘ"
+---------------------------
 
 Na dole strony jest sekcja z podziękowaniem dla autora i przyciskiem
-"Postaw mi kawę", prowadzący na buycoffee.to — polską, realnie działającą
-platformę z płatnością BLIK i opcją "Dowolna kwota" (nie trzeba wybierać
-z góry narzuconej kwoty), bez konieczności zakładania konta przez osobę
-wpłacającą. Na razie link prowadzi do tymczasowego adresu:
+"Postaw mi kawę", prowadzący na:
 
-    https://buycoffee.to/TU-WSTAW-SWOJ-NICK
+    https://buycoffee.to/oxykisiel
 
-Zanim strona pójdzie na żywo, załóż darmowe konto na buycoffee.to (e-mail
-+ nazwa użytkownika, kilka minut) i podmień ten adres na swój prawdziwy
-profil w pliku plan-mechanika-instrukcja.html — wyszukaj (Ctrl+F w
-Notatniku) frazę "TU-WSTAW-SWOJ-NICK" i zastąp ją swoim linkiem. Albo po
-prostu podeślij gotowy link, a zostanie podmieniony automatycznie.
+To realnie działająca polska platforma z płatnością BLIK i opcją
+"Dowolna kwota" (nie trzeba wybierać z góry narzuconej kwoty), bez
+konieczności zakładania konta przez osobę wpłacającą. Link jest już
+gotowy — nic tu nie trzeba podmieniać.
 
 
 DODANIE DO MENU STRONY

@@ -315,11 +315,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Plan Mechanika',
-          style: TextStyle(fontSize: 18),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Flexible(
+              child: Text(
+                'Plan Mechanika',
+                style: TextStyle(fontSize: 18),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Image.asset('assets/icona.png', width: 22, height: 22),
+          ],
         ),
         actions: [
           IconButton(

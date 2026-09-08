@@ -48,6 +48,39 @@ class NotificationService {
     return fallbackBase + (key.hashCode & 0x3fffffff);
   }
 
+  /// Schedules a duty notification, preferring exact timing but falling
+  /// back to inexact if the OS refuses. Android 12+ gates exact alarms
+  /// behind a special permission the user must grant manually in Settings
+  /// (most phones start without it) — zonedSchedule throws
+  /// "exact_alarms_not_permitted" in that case, which without this fallback
+  /// would silently cancel every remaining duty notification for that user.
+  Future<void> _zonedSchedule({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime scheduledDate,
+  }) async {
+    try {
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: _notifDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } catch (_) {
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: _notifDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    }
+  }
+
   String _formatDutyBody(Lesson duty) {
     final location = duty.room.trim();
     final locationText =
@@ -166,24 +199,20 @@ class NotificationService {
           final warningId = _idDutyWarningBase +
               ((entry.key + lesson.startString + lesson.room).hashCode &
                   0x1FFF);
-          await _plugin.zonedSchedule(
+          await _zonedSchedule(
             id: warningId,
             title: 'Dyżur za $warnMin min',
             body: _formatDutyBody(lesson),
             scheduledDate: warningAt,
-            notificationDetails: _notifDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           );
         }
 
         // Powiadomienie na start dyżuru
-        await _plugin.zonedSchedule(
+        await _zonedSchedule(
           id: id,
           title: 'Zaczyna się dyżur',
           body: _formatDutyBody(lesson),
           scheduledDate: scheduledAt,
-          notificationDetails: _notifDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         );
       }
     }

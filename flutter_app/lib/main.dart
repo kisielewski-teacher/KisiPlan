@@ -5,6 +5,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:kisiplan/screens/login_screen.dart';
 import 'package:kisiplan/screens/home_screen.dart';
 import 'package:kisiplan/services/background_sync_service.dart';
+import 'package:kisiplan/services/biometric_auth_service.dart';
 import 'package:kisiplan/services/notification_service.dart';
 import 'package:kisiplan/services/timetable_service.dart';
 
@@ -50,10 +51,12 @@ class SzkolplanApp extends StatefulWidget {
 
 class _SzkolplanAppState extends State<SzkolplanApp> {
   final TimetableService _service = TimetableService();
+  final BiometricAuthService _biometricAuth = BiometricAuthService();
   bool _loading = true;
   bool _loggedIn = false;
   String? _initialUsername;
   String _initialRole = 'teacher';
+  bool _canUseBiometric = false;
 
   @override
   void initState() {
@@ -72,6 +75,11 @@ class _SzkolplanAppState extends State<SzkolplanApp> {
       _loggedIn = loginError == null;
     }
 
+    // Only offer the fingerprint shortcut when there's actually a saved
+    // password to fill in AND the device supports biometrics — otherwise
+    // the button would just be a dead end.
+    final canUseBiometric = hasCreds && await _biometricAuth.isAvailable();
+
     if (!mounted) {
       return;
     }
@@ -79,8 +87,18 @@ class _SzkolplanAppState extends State<SzkolplanApp> {
     setState(() {
       _initialUsername = username;
       _initialRole = savedRole;
+      _canUseBiometric = canUseBiometric;
       _loading = false;
     });
+  }
+
+  Future<({String username, String password})?> _biometricFill() async {
+    final authenticated = await _biometricAuth.authenticate();
+    if (!authenticated) return null;
+    final username = await _service.getSavedUsername();
+    final password = await _service.getSavedPassword();
+    if (username == null || password == null) return null;
+    return (username: username, password: password);
   }
 
   Future<String?> _login(String username, String password, String role) async {
@@ -135,6 +153,8 @@ class _SzkolplanAppState extends State<SzkolplanApp> {
         onLogin: _login,
         initialUsername: _initialUsername,
         initialRole: _initialRole,
+        canUseBiometric: _canUseBiometric,
+        onBiometricFill: _biometricFill,
       );
     }
 

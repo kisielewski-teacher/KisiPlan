@@ -5,12 +5,15 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
-class MainActivity : FlutterActivity() {
+// FlutterFragmentActivity (not plain FlutterActivity) is required by the
+// local_auth plugin — its Android biometric prompt is built on
+// androidx.biometric.BiometricPrompt, which needs a FragmentActivity.
+class MainActivity : FlutterFragmentActivity() {
     private val channelName = "com.example.kisiplan/installer"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

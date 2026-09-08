@@ -140,6 +140,11 @@ class TimetableService {
     return creds.username;
   }
 
+  Future<String?> getSavedPassword() async {
+    final creds = await _secureStorage.readCredentials();
+    return creds.password;
+  }
+
   Future<String?> getSavedRole() => _secureStorage.readRole();
 
   Future<String?> login(
@@ -234,6 +239,14 @@ class TimetableService {
       // The session from portalRodzina?code=... is LIMITED (no plan_lekcji).
       // We need to navigate from portal to Synergia via the SSO link
       // (portalRodzina?v=TIMESTAMP) which sets the oauth_token cookie.
+      //
+      // IMPORTANT (found via live testing): for student accounts this chain never
+      // reaches a working plan_lekcji HTML page (Librus rejects client_id=46 there),
+      // BUT it still sets an `oauth_token` cookie along the way that the REST/gateway
+      // API fallback (_fetchTimetableFromRestApi) needs to authenticate. Skipping this
+      // step for students entirely (tried once) broke the gateway fallback with 401s
+      // across the board — so it must still run for every role, even though the HTML
+      // session itself is a lost cause for students.
       if (portalJar.isNotEmpty) {
         debugPrint('[auth] Trying portal SSO for full Synergia session (role=$role)...');
         await _tryPortalSsoSession(cookieJar, portalJar);
@@ -453,46 +466,6 @@ class TimetableService {
           }
 
           if (portalBody == null || portalBody.isEmpty) continue;
-
-          // Dump portal page structure for analysis
-          debugPrint('[sso] Portal page length: ${portalBody.length}, scanning for tokens...');
-          
-          // Log script tags and their src attributes
-          final scriptTags = RegExp(r'<script[^>]*>').allMatches(portalBody);
-          for (final s in scriptTags) {
-            debugPrint('[sso] SCRIPT: ${s.group(0)}');
-          }
-          
-          // Log any API endpoints referenced
-          final apiUrls = RegExp(r'''["']((?:https?://[^"']*)?/api/[^"']+)["']''').allMatches(portalBody);
-          for (final u in apiUrls) {
-            debugPrint('[sso] API URL: ${u.group(1)}');
-          }
-          
-          // Log any synergia URLs
-          final synUrls = RegExp(r'''["'](https?://synergia[^"']+)["']''').allMatches(portalBody);
-          for (final u in synUrls) {
-            debugPrint('[sso] Synergia URL: ${u.group(1)}');
-          }
-          
-          // Log form elements
-          final forms = RegExp(r'<form[^>]*action="([^"]*)"[^>]*>').allMatches(portalBody);
-          for (final f in forms) {
-            debugPrint('[sso] FORM action: ${f.group(1)}');
-          }
-          
-          // Log meta tags
-          final metas = RegExp(r'<meta[^>]+>').allMatches(portalBody);
-          for (final m in metas) {
-            debugPrint('[sso] META: ${m.group(0)}');
-          }
-          
-          // Log inline script content (first 500 chars of each inline script)
-          final inlineScripts = RegExp(r'<script[^>]*>([^<]{10,})</script>', dotAll: true).allMatches(portalBody);
-          for (final is_ in inlineScripts) {
-            final content = is_.group(1)!;
-            debugPrint('[sso] INLINE SCRIPT (${content.length} chars): ${content.substring(0, content.length.clamp(0, 500))}');
-          }
 
           // APPROACH 1a: Follow the Synergia SSO link found in the portal page.
           // The portal page contains links like:
@@ -1882,7 +1855,14 @@ class TimetableService {
       }
       _bearerToken ??= await _secureStorage.readToken();
       await _fetchAndCacheLessonTimesIfPossible();
-      await _fetchAndMergeDuties(timetable);
+      // Dyżury (breaktime supervision) to koncepcja wyłącznie nauczycielska.
+      // Bez tego gatingu konto ucznia, które trafi tu przez SSO (zamiast fallbacku
+      // REST API), dostałoby _teacherUuid == null i _fetchAndMergeDuties wpadłby
+      // w wariant "bez filtra", doklejając uczniowi dyżury WSZYSTKICH nauczycieli.
+      final role = await _secureStorage.readRole();
+      if (role == 'teacher') {
+        await _fetchAndMergeDuties(timetable);
+      }
       if (_diagnosticLogs) {
         final dutiesCount = timetable.values.expand((x) => x).where((l) => l.isDuty).length;
         final lessonsCount = timetable.values.expand((x) => x).length;

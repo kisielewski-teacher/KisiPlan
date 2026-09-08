@@ -86,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _infoMessage;
   Timer? _ticker;
   DateTime _now = DateTime.now();
+  String? _role;
 
   static const _weekdays = ['', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
   static const _dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
@@ -158,6 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadTimetable();
     _refreshUpdateIndicator();
+    widget.timetableService.getSavedRole().then((role) {
+      if (mounted) setState(() => _role = role);
+    });
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = DateTime.now();
       setState(() {
@@ -332,11 +336,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 : 'Sprawdź aktualizacje',
             onPressed: _checkForUpdateManually,
           ),
-          IconButton(
-            icon: const Icon(Icons.lightbulb_outline),
-            tooltip: 'Prześlij pomysł',
-            onPressed: _openIdeaDialog,
-          ),
+          // Ukryte dla uczniów — konta uczniowskie nadużywały tej funkcji
+          // do wysyłania niepoważnych zgłoszeń zamiast realnych pomysłów.
+          if (_role != 'student')
+            IconButton(
+              icon: const Icon(Icons.lightbulb_outline),
+              tooltip: 'Prześlij pomysł',
+              onPressed: _openIdeaDialog,
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _handleLogout,

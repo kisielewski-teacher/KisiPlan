@@ -6,11 +6,25 @@ class LoginScreen extends StatefulWidget {
     required this.onLogin,
     this.initialUsername,
     this.initialRole = 'teacher',
+    this.canUseBiometric = false,
+    this.onBiometricFill,
   });
 
   final Future<String?> Function(String username, String password, String role) onLogin;
   final String? initialUsername;
   final String initialRole;
+
+  /// Whether to show the fingerprint/Face ID shortcut at all — true only
+  /// when there's a saved password to fill in AND the device supports
+  /// biometrics. Never trusted blindly: the button just triggers
+  /// [onBiometricFill], which does the real authenticate-then-fetch work.
+  final bool canUseBiometric;
+
+  /// Runs device biometric auth, then returns the saved credentials to fill
+  /// into the form (or null if auth failed/was cancelled). This never
+  /// submits the login itself — it only saves the user from retyping the
+  /// password by hand; they still confirm with the normal "Zaloguj" button.
+  final Future<({String username, String password})?> Function()? onBiometricFill;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -38,6 +52,17 @@ class _LoginScreenState extends State<LoginScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fillWithBiometric() async {
+    final onBiometricFill = widget.onBiometricFill;
+    if (onBiometricFill == null) return;
+    final creds = await onBiometricFill();
+    if (creds == null || !mounted) return;
+    setState(() {
+      _usernameController.text = creds.username;
+      _passwordController.text = creds.password;
+    });
   }
 
   Future<void> _submit() async {
@@ -109,9 +134,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Haslo',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: widget.canUseBiometric
+                          ? IconButton(
+                              icon: const Icon(Icons.fingerprint),
+                              tooltip: 'Wypełnij zapisanym hasłem',
+                              onPressed: _fillWithBiometric,
+                            )
+                          : null,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Podaj haslo';

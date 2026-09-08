@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- Instalacja pobranej aktualizacji APK spoza Sklepu Play -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- Odblokowanie ekranu logowania odciskiem palca / Face Unlock -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
 
     <application
         android:label="Plan Mechanika"

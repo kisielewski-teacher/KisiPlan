@@ -1,7 +1,7 @@
 name: kisiplan
 description: Aplikacja planu lekcji dla uczniów i nauczycieli
 publish_to: 'none'
-version: 1.4.8+17
+version: 1.4.9+18
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -25,6 +25,7 @@ dependencies:
   path_provider: ^2.1.6
   home_widget: ^0.9.4
   workmanager: ^0.10.10
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:

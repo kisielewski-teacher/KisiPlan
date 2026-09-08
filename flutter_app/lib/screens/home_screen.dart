@@ -12,6 +12,10 @@ import 'package:url_launcher/url_launcher.dart';
 // Adres, na który trafiają pomysły użytkowników zgłoszone z aplikacji.
 const _feedbackEmail = 'oxykisiel@gmail.com';
 
+// Gap między lekcjami dłuższy niż typowy dzwonek liczy się jako "okienko"
+// (wolny czas), a nie zwykła "przerwa".
+const _freeWindowThresholdMinutes = 30;
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -52,6 +56,10 @@ class _ScheduleBlock {
 
   String get startString => _formatMinutes(startMinutes);
   String get endString => _formatMinutes(endMinutes);
+
+  /// A gap longer than a typical bell-schedule break — free time rather
+  /// than an official "Przerwa".
+  bool get isFreeWindow => isBreak && (endMinutes - startMinutes) >= _freeWindowThresholdMinutes;
 
   int secondsUntilEnd(DateTime now) {
     final nowSeconds = now.hour * 3600 + now.minute * 60 + now.second;
@@ -401,9 +409,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBreakCard(_ScheduleBlock block, {bool compact = false}) {
     final isCurrent = identical(block, _currentBlock);
+    final isFreeWindow = block.isFreeWindow;
+    final accentColor = isFreeWindow ? Colors.blueGrey.shade700 : Colors.green.shade700;
 
     return Card(
-      color: isCurrent ? Colors.green.shade50 : Colors.grey.shade100,
+      color: isCurrent
+          ? Colors.green.shade50
+          : isFreeWindow
+              ? Colors.blueGrey.shade50
+              : Colors.grey.shade100,
       child: ListTile(
         dense: compact,
         leading: Column(
@@ -421,11 +435,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: Row(
           children: [
-            Icon(Icons.free_breakfast, size: compact ? 15 : 18, color: Colors.green.shade700),
+            Icon(
+              isFreeWindow ? Icons.self_improvement : Icons.free_breakfast,
+              size: compact ? 15 : 18,
+              color: accentColor,
+            ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                'Przerwa',
+                isFreeWindow ? 'Okienko' : 'Przerwa',
                 style: TextStyle(
                   fontSize: compact ? 13 : 14,
                   fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
@@ -756,7 +774,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 6),
             Text(
               _currentBlock!.isBreak
-                  ? 'Przerwa'
+                  ? (_currentBlock!.isFreeWindow ? 'Okienko' : 'Przerwa')
                   : _currentIsFreeWindow
                       ? 'Okienko'
                       : _currentBlock!.lesson!.subject,
@@ -883,7 +901,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          currentBlock.isBreak ? 'Koniec przerwy za $minutesLeft min' : 'Koniec za $minutesLeft min',
+          currentBlock.isBreak
+              ? (currentBlock.isFreeWindow ? 'Koniec okienka za $minutesLeft min' : 'Koniec przerwy za $minutesLeft min')
+              : (_currentIsFreeWindow ? 'Koniec okienka za $minutesLeft min' : 'Koniec za $minutesLeft min'),
           style: const TextStyle(fontSize: 18),
         ),
       ],

@@ -8,7 +8,7 @@ Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i n
 
 1. [Wymagania](#wymagania)
 2. [Instalacja na Androidzie](#instalacja-na-androidzie)
-3. [Instalacja na iPhonie](#instalacja-na-iphone)
+3. [Instalacja na iPhonie](#instalacja-na-iphonie)
 4. [Pierwsze uruchomienie i logowanie](#pierwsze-uruchomienie-i-logowanie)
 5. [Instrukcja użytkowania](#instrukcja-użytkowania)
 6. [Powiadomienia](#powiadomienia)

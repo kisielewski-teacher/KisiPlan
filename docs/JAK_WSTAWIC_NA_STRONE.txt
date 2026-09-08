@@ -55,6 +55,21 @@ ALTERNATYWA — zwykły edytor WordPress (blokowy)
 4. Opublikuj i sprawdź podgląd.
 
 
+ZANIM OPUBLIKUJESZ — PODMIEŃ LINK "POSTAW MI KAWĘ"
+-------------------------------------------------------
+
+Na dole strony jest sekcja z podziękowaniem dla autora i przyciskiem
+"Postaw mi kawę". Na razie prowadzi do tymczasowego adresu:
+
+    https://postawmikawe.pl/TU-WSTAW-SWOJ-NICK
+
+Zanim strona pójdzie na żywo, załóż konto na postawmikawe.pl (e-mail +
+nazwa użytkownika, 2 minuty) i podmień ten adres na swój prawdziwy profil
+w pliku plan-mechanika-instrukcja.html — wyszukaj (Ctrl+F w Notatniku)
+frazę "TU-WSTAW-SWOJ-NICK" i zastąp ją swoim linkiem. Albo po prostu
+podeślij mi gotowy link, a ja podmienię to za Ciebie.
+
+
 DODANIE DO MENU STRONY
 --------------------------
 

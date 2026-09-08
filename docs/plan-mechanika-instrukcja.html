@@ -489,6 +489,59 @@
     color:var(--navy-2);
   }
 
+  /* ---------- support / "postaw kawę" ---------- */
+  #pm-manual .support{
+    background:var(--panel-2);
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:30px 24px;
+  }
+  #pm-manual .support-inner{
+    max-width:1120px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  #pm-manual .support-icon{
+    flex:none;
+    width:34px;height:34px;
+    color:var(--red);
+  }
+  #pm-manual .support-inner > div{flex:1 1 360px; min-width:260px;}
+  #pm-manual .support h4{
+    font-family:"Manrope", sans-serif;
+    text-transform:none;
+    letter-spacing:0;
+    font-size:16px;
+    font-weight:800;
+    margin-bottom:4px;
+  }
+  #pm-manual .support p{
+    margin:0;
+    font-size:14px;
+    color:var(--ink-soft);
+    max-width:60ch;
+  }
+  #pm-manual .btn-coffee{
+    flex:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:.6em 1.3em;
+    border:2px solid var(--red);
+    border-radius:3px;
+    color:var(--red);
+    background:transparent;
+    font-weight:700;
+    font-size:15px;
+    text-decoration:none;
+    transition:background .15s, color .15s;
+    white-space:nowrap;
+  }
+  #pm-manual .btn-coffee:hover{background:var(--red); color:#fff;}
+
   #pm-manual footer.pm-footer{
     border-top:1px solid var(--line);
     padding:26px 24px 60px;
@@ -790,6 +843,17 @@
     </section>
 
   </main>
+</div>
+
+<div class="support">
+  <div class="support-inner">
+    <svg class="support-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+    <div>
+      <h4>Podoba Ci się aplikacja?</h4>
+      <p>Plan Mechanika stworzył i rozwija w wolnym czasie <b>Marcin Kisielewski</b>, nauczyciel w naszej szkole — bez żadnej opłaty za korzystanie. Jeśli aplikacja Ci pomaga, możesz postawić mu kawę.</p>
+    </div>
+    <a class="btn-coffee" href="https://postawmikawe.pl/TU-WSTAW-SWOJ-NICK" target="_blank" rel="noopener">Postaw mi kawę</a>
+  </div>
 </div>
 
 <footer class="pm-footer">

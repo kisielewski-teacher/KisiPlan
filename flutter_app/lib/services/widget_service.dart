@@ -22,34 +22,36 @@ class WidgetService {
   Future<void> _write({Lesson? current, Lesson? next}) async {
     final String status;
     final String subject;
-    final String details;
+    final String time;
+    final String room;
+    final String className;
 
     if (current != null) {
       status = 'Teraz';
       subject = current.subject;
-      details = [
-        '${current.startString}-${current.endString}',
-        if (current.room.isNotEmpty) 'sala ${current.room}',
-        if (current.className.isNotEmpty) current.className,
-      ].join(' · ');
+      time = '${current.startString}-${current.endString}';
+      room = current.room.isNotEmpty ? 'sala ${current.room}' : '';
+      className = current.className;
     } else if (next != null) {
       status = 'Następnie';
       subject = next.subject;
-      details = [
-        'od ${next.startString}',
-        if (next.room.isNotEmpty) 'sala ${next.room}',
-        if (next.className.isNotEmpty) next.className,
-      ].join(' · ');
+      time = 'od ${next.startString}';
+      room = next.room.isNotEmpty ? 'sala ${next.room}' : '';
+      className = next.className;
     } else {
       status = 'Plan Mechanika';
       subject = 'Brak lekcji';
-      details = '';
+      time = '';
+      room = '';
+      className = '';
     }
 
     try {
       await HomeWidget.saveWidgetData<String>('status', status);
       await HomeWidget.saveWidgetData<String>('subject', subject);
-      await HomeWidget.saveWidgetData<String>('details', details);
+      await HomeWidget.saveWidgetData<String>('time', time);
+      await HomeWidget.saveWidgetData<String>('room', room);
+      await HomeWidget.saveWidgetData<String>('className', className);
       await HomeWidget.updateWidget(androidName: _androidWidgetName);
     } catch (_) {
       // No widget placed on the home screen, or platform doesn't support

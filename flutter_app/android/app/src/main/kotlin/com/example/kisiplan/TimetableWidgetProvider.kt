@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
@@ -30,10 +31,9 @@ class TimetableWidgetProvider : HomeWidgetProvider() {
                 R.id.widget_subject,
                 widgetData.getString("subject", "Brak lekcji"),
             )
-            views.setTextViewText(
-                R.id.widget_details,
-                widgetData.getString("details", ""),
-            )
+            setRowText(views, R.id.widget_time, widgetData.getString("time", ""))
+            setRowText(views, R.id.widget_room, widgetData.getString("room", ""))
+            setRowText(views, R.id.widget_class, widgetData.getString("className", ""))
 
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
             if (launchIntent != null) {
@@ -47,6 +47,17 @@ class TimetableWidgetProvider : HomeWidgetProvider() {
             }
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+    }
+
+    /** Sets a row's text, collapsing it entirely (freeing its layout_weight
+     *  to the rows still visible) when there's nothing to show. */
+    private fun setRowText(views: RemoteViews, viewId: Int, text: String?) {
+        if (text.isNullOrEmpty()) {
+            views.setViewVisibility(viewId, View.GONE)
+        } else {
+            views.setViewVisibility(viewId, View.VISIBLE)
+            views.setTextViewText(viewId, text)
         }
     }
 }

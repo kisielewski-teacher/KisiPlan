@@ -2208,10 +2208,9 @@ class TimetableService {
     final items = (data is List ? data : (data['data'] ?? data['items'] ?? [])) as List;
     if (_diagnosticLogs) {
       debugPrint('[diag] breaktimesupervision items: ${items.length}');
-      if (items.isNotEmpty) {
-        debugPrint('[diag] first item keys: ${(items.first as Map).keys.toList()}');
-        final encoded = json.encode(items.first);
-        debugPrint('[diag] first item: ${encoded.substring(0, encoded.length.clamp(0, 500))}');
+      for (var i = 0; i < items.length; i++) {
+        final encoded = json.encode(items[i]);
+        debugPrint('[diag] supervision item $i: ${encoded.substring(0, encoded.length.clamp(0, 700))}');
       }
     }
 
@@ -2224,20 +2223,32 @@ class TimetableService {
       final timeTo = hours?['endTime'] ?? item['timeTo'] ?? item['time_to'] ?? item['endTime'];
       final placeId = item['placeIdentifier'] ?? item['place'] ?? item['location'] ?? '';
       final location = placesMap[placeId.toString()] ?? placeId.toString();
+      // A duty covering for another supervisor comes back with
+      // status "SUBSTITUTION" (and a substitutedSupervisorIdentifier)
+      // instead of the normal "ACTUAL".
+      final isSubstitutionDuty = item['status'] == 'SUBSTITUTION';
       if (dateStr == null || timeFrom == null || timeTo == null) continue;
       final date = DateTime.tryParse(dateStr);
       if (date == null) continue;
       final dayKey = dayKeys[date.weekday];
         if (dayKey == null) continue;
 
-        final alreadyPresent = timetable[dayKey]!.any(
-          (l) =>
-              l.isDuty &&
-              l.startString == timeFrom.toString() &&
-              l.endString == timeTo.toString() &&
-              l.room.trim().toLowerCase() == location.toString().trim().toLowerCase(),
-        );
-        if (alreadyPresent) continue;
+        bool matchesThisDuty(Lesson l) =>
+            l.isDuty &&
+            l.startString == timeFrom.toString() &&
+            l.endString == timeTo.toString() &&
+            l.room.trim().toLowerCase() == location.toString().trim().toLowerCase();
+        final existing = timetable[dayKey]!.where(matchesThisDuty).toList();
+        if (existing.isNotEmpty) {
+          // Already added (e.g. by the HTML parser) — only worth touching if
+          // this feed knows it's a substitution and the existing entry
+          // doesn't yet reflect that.
+          if (isSubstitutionDuty && existing.any((l) => !l.isSubstitution)) {
+            timetable[dayKey]!.removeWhere(matchesThisDuty);
+          } else {
+            continue;
+          }
+        }
 
         timetable[dayKey]!.add(Lesson.fromJson({
           'start': timeFrom.toString(),
@@ -2246,6 +2257,7 @@ class TimetableService {
           'room': location.toString(),
           'className': '',
           'isDuty': true,
+          'isSubstitution': isSubstitutionDuty,
         }));
       }
       timetable.forEach((_, lessons) => lessons.sort((a, b) => a.startMinutes.compareTo(b.startMinutes)));

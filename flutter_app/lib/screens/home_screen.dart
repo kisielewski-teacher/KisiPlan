@@ -622,6 +622,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               )
+            : lesson.isSubstitution
+            // Student accounts get substitutions from the REST API, which
+            // (unlike the teacher HTML view) doesn't expose what the
+            // original lesson was — so there's no original to show
+            // struck-through, only a tag flagging the change.
+            ? Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      lesson.subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: compact ? 13 : 14),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  _buildTag('Zastępstwo', Colors.green, compact: compact),
+                ],
+              )
             : Text(
                 lesson.subject,
                 maxLines: 1,

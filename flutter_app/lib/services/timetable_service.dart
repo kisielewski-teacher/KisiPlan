@@ -2005,7 +2005,10 @@ class TimetableService {
 
           for (final slot in periodData) {
             final slotMap = slot as Map<String, dynamic>;
-            if (slotMap['IsCanceled'] == true) continue;
+            // Previously skipped outright, which hid cancellations from
+            // students entirely. Keep the slot and mark it isCancelled so the
+            // UI can show it struck through, matching the teacher HTML view.
+            final isCanceled = slotMap['IsCanceled'] == true;
 
             final lessonNo = int.tryParse(slotMap['LessonNo']?.toString() ?? '') ?? periodIdx;
             final times = lessonTimes[lessonNo];
@@ -2015,7 +2018,7 @@ class TimetableService {
 
             final classroomId = (slotMap['Classroom'] as Map<String, dynamic>?)?['Id']?.toString() ?? '';
             final room = classroomNames[classroomId] ?? '';
-            final isSubstitution = slotMap['IsSubstitutionClass'] == true;
+            final isSubstitution = !isCanceled && slotMap['IsSubstitutionClass'] == true;
 
             final classSymbol = (slotMap['Class'] as Map<String, dynamic>?)?['Symbol']?.toString() ?? '';
             final classGroupName = (slotMap['ClassGroup'] as Map<String, dynamic>?)?['Name']?.toString() ?? '';
@@ -2029,6 +2032,7 @@ class TimetableService {
               'className': className,
               'isSubstitution': isSubstitution,
               'isDuty': false,
+              'isCancelled': isCanceled,
             }));
           }
         }

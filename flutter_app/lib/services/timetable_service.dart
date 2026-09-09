@@ -1649,11 +1649,24 @@ class TimetableService {
   }
 
   Future<LoadResult> getTodayLessons() async {
-    // Only actually true if a relogin was attempted below because the saved
-    // session looked empty/dead — otherwise a failed fetch here just means a
-    // network/server hiccup (bad school wifi, DNS blip, Librus down, ...)
-    // and blaming "session expired" would be misleading.
+    // Only actually true once a relogin is attempted below — otherwise a
+    // failed fetch here just means a network/server hiccup (bad school
+    // wifi, DNS blip, Librus down, ...) and blaming "session expired"
+    // would be misleading.
     var sessionActuallyExpired = false;
+    var relogAttempted = false;
+
+    // Tries a fresh login at most once per call. Cookies being non-empty
+    // doesn't mean the session is actually alive — Librus can reject a
+    // stale token outright (e.g. HTML "Brak dostępu" or REST/gateway 401
+    // "TokenIsExpired") without us clearing it locally first, so this is
+    // also used as a last resort even when cookies "looked" fine.
+    Future<bool> tryRelogin() async {
+      if (relogAttempted) return false;
+      relogAttempted = true;
+      sessionActuallyExpired = true;
+      return (await autoLoginIfPossible()) == null;
+    }
 
     final remote = await _fetchRemoteTimetable();
     if (remote != null) {
@@ -1666,9 +1679,7 @@ class TimetableService {
 
     // Jeśli _sessionCookies == null lub puste, sesja wygasła - próbuj ponownie zalogować
     if (_sessionCookies == null || _sessionCookies!.isEmpty) {
-      sessionActuallyExpired = true;
-      final loginError = await autoLoginIfPossible();
-      if (loginError == null) {
+      if (await tryRelogin()) {
         final remoteAfterRelogin = await _fetchRemoteTimetable();
         if (remoteAfterRelogin != null) {
           await _db.replaceAll(remoteAfterRelogin);
@@ -1684,17 +1695,20 @@ class TimetableService {
       return LoadResult(lessons: _extractToday(apiResult), weekTimetable: apiResult, fromCache: false);
     }
 
-    // Jeśli REST API zawiodło i sesja wygasła (wyczyszczona przez _tryGetGatewayToken
-    // gdy /Me zwróciło 401), spróbuj ponownie zalogować i jeszcze raz REST API
-    if (_sessionCookies == null || _sessionCookies!.isEmpty) {
-      sessionActuallyExpired = true;
-      final loginError = await autoLoginIfPossible();
-      if (loginError == null) {
-        final apiAfterRelogin = await _fetchTimetableFromRestApi();
-        if (apiAfterRelogin != null) {
-          await _db.replaceAll(apiAfterRelogin);
-          return LoadResult(lessons: _extractToday(apiAfterRelogin), weekTimetable: apiAfterRelogin, fromCache: false);
-        }
+    // Both the HTML plan and the REST/gateway API failed. If cookies looked
+    // empty this was already retried above; if they looked non-empty but
+    // everything still failed, the session may be dead server-side without
+    // us knowing — try one relogin before giving up either way.
+    if (await tryRelogin()) {
+      final remoteAfterRelogin = await _fetchRemoteTimetable();
+      if (remoteAfterRelogin != null) {
+        await _db.replaceAll(remoteAfterRelogin);
+        return LoadResult(lessons: _extractToday(remoteAfterRelogin), weekTimetable: remoteAfterRelogin, fromCache: false);
+      }
+      final apiAfterRelogin = await _fetchTimetableFromRestApi();
+      if (apiAfterRelogin != null) {
+        await _db.replaceAll(apiAfterRelogin);
+        return LoadResult(lessons: _extractToday(apiAfterRelogin), weekTimetable: apiAfterRelogin, fromCache: false);
       }
     }
 

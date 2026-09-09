@@ -2029,6 +2029,14 @@ class TimetableService {
             final classroomId = (slotMap['Classroom'] as Map<String, dynamic>?)?['Id']?.toString() ?? '';
             final room = classroomNames[classroomId] ?? '';
             final isSubstitution = !isCanceled && slotMap['IsSubstitutionClass'] == true;
+            // No confirmed field for the covering teacher's name yet (see
+            // commit "Show substitutions and cancellations for student
+            // accounts" — the REST API slot didn't expose the original
+            // lesson either). Log the raw slot so the field can be found and
+            // wired up next time a real substitution shows up; remove once done.
+            if (isSubstitution) {
+              debugPrint('[api][substitution-raw] ${json.encode(slotMap)}');
+            }
 
             final classSymbol = (slotMap['Class'] as Map<String, dynamic>?)?['Symbol']?.toString() ?? '';
             final classGroupName = (slotMap['ClassGroup'] as Map<String, dynamic>?)?['Name']?.toString() ?? '';

@@ -7,6 +7,7 @@ import 'package:kisiplan/services/notification_service.dart';
 import 'package:kisiplan/services/timetable_service.dart';
 import 'package:kisiplan/services/update_service.dart';
 import 'package:kisiplan/services/widget_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Adres, na który trafiają pomysły użytkowników zgłoszone z aplikacji.
@@ -88,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _ticker;
   DateTime _now = DateTime.now();
   String? _role;
+  String? _appVersion;
 
   static const _weekdays = ['', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
   static const _dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
@@ -160,6 +162,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadTimetable();
     _refreshUpdateIndicator();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _appVersion = info.version);
+    });
     widget.timetableService.getSavedRole().then((role) {
       if (mounted) setState(() => _role = role);
     });
@@ -333,20 +338,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Flexible(
-              child: Text(
+        titleSpacing: 0,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
                 'Plan Mechanika',
                 style: TextStyle(fontSize: 18),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            const SizedBox(width: 6),
-            Image.asset('assets/icona.png', width: 22, height: 22),
-          ],
+              const SizedBox(width: 6),
+              Image.asset('assets/icona.png', width: 22, height: 22),
+            ],
+          ),
         ),
         bottom: _isRefreshing && !_isLoading
             ? const PreferredSize(
@@ -434,9 +441,12 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Autor: Marcin Kisielewski',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
+            Text(
+              _appVersion != null
+                  ? 'Autor: Marcin Kisielewski (wersja $_appVersion)'
+                  : 'Autor: Marcin Kisielewski',
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             InkWell(

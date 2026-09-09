@@ -1649,6 +1649,12 @@ class TimetableService {
   }
 
   Future<LoadResult> getTodayLessons() async {
+    // Only actually true if a relogin was attempted below because the saved
+    // session looked empty/dead — otherwise a failed fetch here just means a
+    // network/server hiccup (bad school wifi, DNS blip, Librus down, ...)
+    // and blaming "session expired" would be misleading.
+    var sessionActuallyExpired = false;
+
     final remote = await _fetchRemoteTimetable();
     if (remote != null) {
       final totalRemote = remote.values.expand((x) => x).length;
@@ -1660,6 +1666,7 @@ class TimetableService {
 
     // Jeśli _sessionCookies == null lub puste, sesja wygasła - próbuj ponownie zalogować
     if (_sessionCookies == null || _sessionCookies!.isEmpty) {
+      sessionActuallyExpired = true;
       final loginError = await autoLoginIfPossible();
       if (loginError == null) {
         final remoteAfterRelogin = await _fetchRemoteTimetable();
@@ -1680,6 +1687,7 @@ class TimetableService {
     // Jeśli REST API zawiodło i sesja wygasła (wyczyszczona przez _tryGetGatewayToken
     // gdy /Me zwróciło 401), spróbuj ponownie zalogować i jeszcze raz REST API
     if (_sessionCookies == null || _sessionCookies!.isEmpty) {
+      sessionActuallyExpired = true;
       final loginError = await autoLoginIfPossible();
       if (loginError == null) {
         final apiAfterRelogin = await _fetchTimetableFromRestApi();
@@ -1697,7 +1705,9 @@ class TimetableService {
         lessons: todayFromCache,
         weekTimetable: cached,
         fromCache: true,
-        warning: 'Sesja wygasła, nie udało się pobrać nowego planu. Pokazano ostatni zapisany.',
+        warning: sessionActuallyExpired
+            ? 'Sesja wygasła, nie udało się pobrać nowego planu. Pokazano ostatni zapisany.'
+            : 'Brak internetu lub problem z serwerem Librusa. Pokazano ostatni zapisany plan.',
       );
     }
     return const LoadResult(

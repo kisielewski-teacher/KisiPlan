@@ -406,10 +406,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 24, 16, 24 + bottomInset),
-      child: const Center(
-        child: Text(
-          'Autor: Marcin Kisielewski',
-          style: TextStyle(fontSize: 13, color: Colors.grey),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Autor: Marcin Kisielewski',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            InkWell(
+              onTap: () => launchUrl(
+                Uri.parse('https://buycoffee.to/oxykisiel'),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: const Text(
+                'Postaw mi kawę ☕',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -396,7 +396,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _buildContent(),
+          : RefreshIndicator(
+              onRefresh: _loadTimetable,
+              child: _buildContent(),
+            ),
     );
   }
 
@@ -404,6 +407,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final todayTimeline = _buildTimeline(_todayLessons);
 
     return CustomScrollView(
+      // Needed so pull-to-refresh works even when the content is too short
+      // to scroll on its own (e.g. a single lesson today).
+      physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(child: _buildHeader()),
         if (_schoolDone)

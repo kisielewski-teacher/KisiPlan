@@ -1708,6 +1708,16 @@ class TimetableService {
     );
   }
 
+  /// Instantly returns whatever timetable is already saved on the phone,
+  /// without touching the network. School wifi/signal is often too weak or
+  /// absent during the day, and schedule changes are only published in the
+  /// morning or afternoon/evening anyway — so the screen shouldn't have to
+  /// wait on a live fetch just to show today's plan.
+  Future<LoadResult> getCachedTimetable() async {
+    final cached = await _db.readAll();
+    return LoadResult(lessons: _extractToday(cached), weekTimetable: cached, fromCache: true);
+  }
+
   Future<Map<String, List<Lesson>>?> _fetchRemoteTimetable() async {
     _sessionCookies ??= await _secureStorage.readCookies();
     if (_sessionCookies == null || _sessionCookies!.isEmpty) {

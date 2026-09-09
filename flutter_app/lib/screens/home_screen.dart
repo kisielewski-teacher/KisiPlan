@@ -83,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, List<Lesson>> _weekTimetable = {};
   _ScheduleBlock? _currentBlock;
   bool _isLoading = false;
+  bool _isRefreshing = false;
   String? _infoMessage;
   Timer? _ticker;
   DateTime _now = DateTime.now();
@@ -183,10 +184,26 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  /// Paints instantly from whatever's cached on the phone (fast even with no
+  /// signal, since school schedule changes only ever land in the morning or
+  /// afternoon/evening anyway), then quietly refreshes from the network in
+  /// the background instead of making the whole screen wait on a live fetch.
   Future<void> _loadTimetable() async {
+    final cached = await widget.timetableService.getCachedTimetable();
+    final hasCache = cached.lessons.isNotEmpty || cached.weekTimetable.isNotEmpty;
+
+    if (!mounted) return;
     setState(() {
-      _isLoading = true;
-      _infoMessage = null;
+      if (hasCache) {
+        _todayLessons = cached.lessons;
+        _weekTimetable = cached.weekTimetable;
+        _currentBlock = _resolveCurrent(DateTime.now());
+        _isLoading = false;
+      } else {
+        _isLoading = true;
+        _infoMessage = null;
+      }
+      _isRefreshing = true;
     });
 
     final result = await widget.timetableService.getTodayLessons();
@@ -201,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _currentBlock = _resolveCurrent(DateTime.now());
       _infoMessage = result.warning;
       _isLoading = false;
+      _isRefreshing = false;
     });
 
     // Planowanie powiadomień o dyżurach w tle — nie blokuje UI
@@ -330,6 +348,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Image.asset('assets/icona.png', width: 22, height: 22),
           ],
         ),
+        bottom: _isRefreshing && !_isLoading
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(minHeight: 2),
+              )
+            : null,
         actions: [
           IconButton(
             icon: Icon(

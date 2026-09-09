@@ -26,6 +26,11 @@ void main() async {
 /// Periodically re-fetches the timetable in the background so the user gets
 /// notified about plan changes (and the home screen widget stays current)
 /// even while the app isn't open. Android only — see background_sync_service.dart.
+///
+/// Runs at most once an hour, and only when there's a network connection
+/// (NetworkType.connected below) — school buildings often have no signal, so
+/// WorkManager simply holds the job until connectivity comes back (e.g. the
+/// first wifi/data the phone gets in the morning) instead of retrying blindly.
 Future<void> _registerBackgroundSync() async {
   if (!Platform.isAndroid) return;
   try {
@@ -33,9 +38,11 @@ Future<void> _registerBackgroundSync() async {
     await Workmanager().registerPeriodicTask(
       backgroundSyncTaskName,
       backgroundSyncTaskName,
-      frequency: const Duration(minutes: 30),
+      frequency: const Duration(hours: 1),
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+      // `replace` (not `keep`) so devices upgrading from the old 30-minute
+      // build actually pick up the new hourly frequency.
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
     );
   } catch (_) {
     // Background sync is a nice-to-have — never block app startup on it.

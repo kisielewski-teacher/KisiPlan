@@ -159,7 +159,7 @@ class TimetableService {
     try {
       final cookieJar = <String, String>{};
       final domainJar = DomainCookieJar();
-      final ioClient = HttpClient();
+      final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
 
       // Step 1: Initialize OAuth session (follow all redirects, collect cookies)
       await _ioGetWithRedirects(
@@ -387,7 +387,7 @@ class TimetableService {
     Map<String, String> cookieJar,
     Map<String, String> portalJar,
   ) async {
-    final ioClient = HttpClient();
+    final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       // APPROACH 1: Fetch the portal page and extract JWT / access token.
       // The portal SPA page (portal.librus.pl/rodzina) may contain the JWT
@@ -806,7 +806,7 @@ class TimetableService {
       // Known to fail for student accounts with "invalidUserType", 
       // but kept as last resort in case Librus changes the behavior.
       debugPrint('[sso] Approach 3: OAuth re-login with client_id=47');
-      final ioClient2 = HttpClient();
+      final ioClient2 = HttpClient()..connectionTimeout = const Duration(seconds: 10);
       try {
         final oauthJar = <String, String>{};
         await _ioGetWithRedirects(ioClient2,
@@ -1001,7 +1001,7 @@ class TimetableService {
 
   /// Exchanges the OAuth authorization code (from portalRodzina redirect) at the portal's token endpoint.
   Future<void> _tryExchangePortalAuthCode(String code, String clientId) async {
-    final ioClient = HttpClient();
+    final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       _portalCookies ??= await _secureStorage.readPortalCookies();
       final portalJar = _portalCookies != null ? _parseCookieString(_portalCookies!) : <String, String>{};
@@ -1074,7 +1074,7 @@ class TimetableService {
   /// After the main OAuth login flow, we already have portal_librus_session cookie.
   /// Use it to call the Portal SynergiaAccounts API for an access token.
   Future<void> _tryGetBearerTokenViaPortal(String username, String password) async {
-    final ioClient = HttpClient();
+    final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       // We already have portal cookies from the main login's goTo redirect.
       // Let's use them to call the Portal API directly.
@@ -2559,7 +2559,7 @@ class TimetableService {
     Map<String, String> cookieJar, {
     int maxHops = 15,
   }) async {
-    final ioClient = HttpClient();
+    final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       String url = startUrl;
       for (var i = 0; i < maxHops; i++) {
@@ -2602,7 +2602,7 @@ class TimetableService {
     int maxHops = 15,
     DomainCookieJar? domainJar,
   }) async {
-    final ioClient = HttpClient();
+    final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       String url = startUrl;
       for (var i = 0; i < maxHops; i++) {
@@ -2762,7 +2762,7 @@ class TimetableService {
   Future<void> _tryGetGatewayToken() async {
     if (_sessionCookies == null) return;
     try {
-      final ioClient = HttpClient();
+      final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
 
       final cookieJar = _parseCookieString(_sessionCookies!);
 

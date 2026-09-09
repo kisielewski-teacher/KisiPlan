@@ -77,10 +77,15 @@ class _SzkolplanAppState extends State<SzkolplanApp> {
 
     final savedRole = await _service.getSavedRole() ?? 'teacher';
 
-    if (hasCreds) {
-      final loginError = await _service.autoLoginIfPossible();
-      _loggedIn = loginError == null;
-    }
+    // Previously this ran the full login chain (OAuth + portal SSO + token
+    // exchange — several sequential network round trips) on every single
+    // app launch before showing anything. That's redundant: HomeScreen
+    // already paints the cached plan instantly and TimetableService itself
+    // re-authenticates transparently in the background only if the saved
+    // session actually turns out to be dead (see getTodayLessons ->
+    // _fetchRemoteTimetable / autoLoginIfPossible). So just trust saved
+    // credentials here and let the real fetch sort out login lazily.
+    _loggedIn = hasCreds;
 
     // Only offer the fingerprint shortcut when there's actually a saved
     // password to fill in AND the device supports biometrics — otherwise

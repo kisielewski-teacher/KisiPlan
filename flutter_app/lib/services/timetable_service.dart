@@ -2408,13 +2408,30 @@ class TimetableService {
           room = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(newText)?.group(1) ?? '';
           className = _extractClassName(newText);
         } else {
-          // No replacement lesson - the whole slot is just crossed out.
-          isCancelled = true;
+          // Only one div.text: either a plain cancellation, or a colleague's
+          // lesson substituted into what was previously free time for this
+          // teacher (e.g. tooltip "Nauczyciel: \u015alufarski Marcin -> Kisielewski
+          // Marcin") \u2014 there's no "original" lesson of ours here to show
+          // struck through, just the new one filling the gap. The small
+          // "zast\u0119pstwo"/"przesuni\u0119cie" badge Librus renders is the only
+          // reliable way to tell the two apart.
+          final badge = cell.querySelector('div.center.plan-lekcji-info')?.text.trim().toLowerCase() ?? '';
+          final isRealSubstitution = badge.contains('zast\u0119pstwo') ||
+              badge.contains('zastepstwo') ||
+              badge.contains('przesuni\u0119cie') ||
+              badge.contains('przesuniecie');
+
           final source = textDivs.isNotEmpty ? textDivs[0] : cell;
           final text = source.text.trim();
           subject = source.querySelector('b')?.text.trim() ?? text;
           room = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(text)?.group(1) ?? '';
           className = _extractClassName(text);
+
+          if (isRealSubstitution) {
+            isSubstitution = true;
+          } else {
+            isCancelled = true;
+          }
         }
       } else {
         subject = cell.querySelector('b')?.text.trim() ?? cellText;

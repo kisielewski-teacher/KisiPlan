@@ -16,7 +16,7 @@ Set<String> signature(Map<String, List<Lesson>> timetable) {
     for (final l in lessons) {
       result.add(
         '$day|${l.startString}|${l.endString}|${l.subject}|${l.room}|${l.className}|'
-        '${l.isSubstitution}|${l.isDuty}|${l.isCancelled}',
+        '${l.isSubstitution}|${l.isDuty}|${l.isCancelled}|${l.isMoved}',
       );
     }
   });
@@ -38,6 +38,7 @@ Lesson _lesson(
   bool isSubstitution = false,
   bool isDuty = false,
   bool isCancelled = false,
+  bool isMoved = false,
 }) {
   return Lesson.fromJson({
     'start': start,
@@ -48,6 +49,7 @@ Lesson _lesson(
     'isSubstitution': isSubstitution,
     'isDuty': isDuty,
     'isCancelled': isCancelled,
+    'isMoved': isMoved,
   });
 }
 
@@ -87,6 +89,13 @@ void main() {
       final after = {'monday': [_lesson('08:00', '08:45', isSubstitution: true)]};
       expect(sameTimetable(before, after), isFalse,
           reason: 'the signature includes isSubstitution, so a fresh "zastępstwo" must be detected');
+    });
+
+    test('a lesson flipping to moved ("przesunięcie") triggers a notification', () {
+      final before = {'monday': [_lesson('08:00', '08:45')]};
+      final after = {'monday': [_lesson('08:00', '08:45', isMoved: true)]};
+      expect(sameTimetable(before, after), isFalse,
+          reason: 'the signature includes isMoved, so a fresh "przesunięcie" must be detected');
     });
 
     test('a room change alone triggers a notification', () {

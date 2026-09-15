@@ -2375,6 +2375,7 @@ class TimetableService {
       String className;
       bool isSubstitution = false;
       bool isCancelled = false;
+      bool isMoved = false;
       String? originalSubject;
       String? originalRoom;
       String? originalClassName;
@@ -2395,9 +2396,18 @@ class TimetableService {
         // as their common ancestor, so its exact position can't be used to
         // decide whether a replacement exists — only the div count can.
         final textDivs = cell.querySelectorAll('div.text');
+        // The small badge Librus renders is the only reliable way to tell a
+        // real substitution ("zast\u0119pstwo", a colleague covering the class)
+        // apart from the original lesson simply being shifted to another
+        // slot ("przesuni\u0119cie") \u2014 both strike the cell through and both can
+        // show one or two div.text elements, so the div count alone can't
+        // be used to decide which one this is.
+        final badge = cell.querySelector('div.center.plan-lekcji-info')?.text.trim() ?? '';
+        final classification = classifyChangeBadge(badge, hasReplacementLesson: textDivs.length >= 2);
 
         if (textDivs.length >= 2) {
-          isSubstitution = true;
+          isSubstitution = classification.isSubstitution;
+          isMoved = classification.isMoved;
           final origText = textDivs[0].text.trim();
           originalSubject = textDivs[0].querySelector('b')?.text.trim() ?? '';
           originalRoom = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(origText)?.group(1) ?? '';
@@ -2412,26 +2422,16 @@ class TimetableService {
           // lesson substituted into what was previously free time for this
           // teacher (e.g. tooltip "Nauczyciel: \u015alufarski Marcin -> Kisielewski
           // Marcin") \u2014 there's no "original" lesson of ours here to show
-          // struck through, just the new one filling the gap. The small
-          // "zast\u0119pstwo"/"przesuni\u0119cie" badge Librus renders is the only
-          // reliable way to tell the two apart.
-          final badge = cell.querySelector('div.center.plan-lekcji-info')?.text.trim().toLowerCase() ?? '';
-          final isRealSubstitution = badge.contains('zast\u0119pstwo') ||
-              badge.contains('zastepstwo') ||
-              badge.contains('przesuni\u0119cie') ||
-              badge.contains('przesuniecie');
-
+          // struck through, just the new one filling the gap.
           final source = textDivs.isNotEmpty ? textDivs[0] : cell;
           final text = source.text.trim();
           subject = source.querySelector('b')?.text.trim() ?? text;
           room = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(text)?.group(1) ?? '';
           className = _extractClassName(text);
 
-          if (isRealSubstitution) {
-            isSubstitution = true;
-          } else {
-            isCancelled = true;
-          }
+          isSubstitution = classification.isSubstitution;
+          isMoved = classification.isMoved;
+          isCancelled = classification.isCancelled;
         }
       } else {
         subject = cell.querySelector('b')?.text.trim() ?? cellText;
@@ -2453,6 +2453,7 @@ class TimetableService {
         'isSubstitution': isSubstitution,
         'isDuty': isDuty,
         'isCancelled': isCancelled,
+        'isMoved': isMoved,
         if (originalSubject != null && originalSubject.isNotEmpty)
           'originalSubject': originalSubject,
         if (originalRoom != null && originalRoom.isNotEmpty)
@@ -2569,6 +2570,31 @@ class TimetableService {
   List<Lesson> _extractToday(Map<String, List<Lesson>> timetable) {
     const days = ['', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     return timetable[days[DateTime.now().weekday]] ?? [];
+  }
+
+  /// Classifies a struck-through dziennik cell using the small badge Librus
+  /// renders next to it ("zastępstwo" = a colleague covering the class,
+  /// "przesunięcie" = the same lesson shifted to a different slot). Exposed
+  /// as a static, side-effect-free method so this distinction can be unit
+  /// tested without going through the full HTML parser.
+  static ({bool isSubstitution, bool isMoved, bool isCancelled}) classifyChangeBadge(
+    String badgeText, {
+    required bool hasReplacementLesson,
+  }) {
+    final badge = badgeText.toLowerCase();
+    final isRealSubstitution = badge.contains('zastępstwo') || badge.contains('zastepstwo');
+    final isRealMove = badge.contains('przesunięcie') || badge.contains('przesuniecie');
+
+    if (isRealSubstitution) {
+      return (isSubstitution: true, isMoved: false, isCancelled: false);
+    }
+    if (isRealMove) {
+      return (isSubstitution: false, isMoved: true, isCancelled: false);
+    }
+    // No badge match: when there's a replacement lesson shown, fall back to
+    // treating it as a substitution (the old, pre-badge-check behaviour);
+    // with no replacement, it's a plain cancellation.
+    return (isSubstitution: hasReplacementLesson, isMoved: false, isCancelled: !hasReplacementLesson);
   }
 
   /// Extracts the class name from a div.text content.

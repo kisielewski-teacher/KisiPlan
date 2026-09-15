@@ -544,12 +544,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildLessonCard(Lesson lesson, {bool compact = false}) {
     final isCurrent = identical(_currentBlock?.lesson, lesson) && !(_currentBlock?.isBreak ?? false);
-    // A full substitution shows both the cancelled original and its
-    // replacement, so it gets a custom two-row layout (see below) instead
-    // of ListTile's title/subtitle/trailing, which can't keep a multi-line
-    // left side lined up against the room text on the right.
-    final isFullSubstitution =
-        lesson.isSubstitution && !lesson.isDuty && (lesson.originalSubject?.isNotEmpty ?? false);
+    // A real substitution ("zastępstwo", a colleague covering the class) is
+    // tagged distinctly from the lesson simply being shifted to a different
+    // slot ("przesunięcie") — they look the same in the dziennik markup
+    // (struck-through original + replacement) but mean different things.
+    final isChange = lesson.isSubstitution || lesson.isMoved;
+    final changeLabel = lesson.isMoved ? 'Przesunięcie' : 'Zastępstwo';
+    final changeColor = lesson.isMoved ? Colors.blue : Colors.green;
+    final changeIcon = lesson.isMoved ? Icons.schedule : Icons.swap_horiz;
+    // A full change shows both the cancelled original and its replacement,
+    // so it gets a custom two-row layout (see below) instead of ListTile's
+    // title/subtitle/trailing, which can't keep a multi-line left side
+    // lined up against the room text on the right.
+    final isFullSubstitution = isChange && !lesson.isDuty && (lesson.originalSubject?.isNotEmpty ?? false);
 
     Color? cardColor;
     if (isCurrent) {
@@ -558,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
       cardColor = Colors.purple.shade50;
     } else if (lesson.isCancelled) {
       cardColor = Colors.grey.shade200;
-    } else if (lesson.isSubstitution) {
+    } else if (isChange) {
       cardColor = Colors.orange.shade50;
     }
     return Card(
@@ -582,9 +589,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(fontSize: compact ? 13 : 14),
                     ),
                   ),
-                  if (lesson.isSubstitution) ...[
+                  if (isChange) ...[
                     const SizedBox(width: 4),
-                    _buildTag('Zastępstwo', Colors.green, compact: compact),
+                    _buildTag(changeLabel, changeColor, compact: compact),
                   ],
                 ],
               )
@@ -664,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.swap_horiz, size: 15, color: Colors.orange),
+                                Icon(changeIcon, size: 15, color: Colors.orange),
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
@@ -675,7 +682,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                _buildTag('Zastępstwo', Colors.green, compact: compact),
+                                _buildTag(changeLabel, changeColor, compact: compact),
                               ],
                             ),
                             if (lesson.className.isNotEmpty)
@@ -691,7 +698,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               )
-            : lesson.isSubstitution
+            : isChange
             // Student accounts get substitutions from the REST API, which
             // (unlike the teacher HTML view) doesn't expose what the
             // original lesson was — so there's no original to show
@@ -707,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  _buildTag('Zastępstwo', Colors.green, compact: compact),
+                  _buildTag(changeLabel, changeColor, compact: compact),
                 ],
               )
             : Text(

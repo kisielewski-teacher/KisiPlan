@@ -11,7 +11,11 @@ class Lesson {
   // Whole lesson struck through in the dziennik with no replacement lesson
   // taking its place (e.g. teacher/class absence, cancelled lesson).
   final bool isCancelled;
-  // Non-null only when isSubstitution == true — the lesson that was cancelled
+  // True when the dziennik tags the change as "przesunięcie" (the same
+  // lesson shifted to a different slot) rather than "zastępstwo" (a
+  // substitution). Mutually exclusive with isSubstitution.
+  final bool isMoved;
+  // Non-null only when isSubstitution or isMoved == true — the lesson that was cancelled
   final String? originalSubject;
   final String? originalRoom;
   final String? originalClassName;
@@ -25,6 +29,7 @@ class Lesson {
     this.isSubstitution = false,
     this.isDuty = false,
     this.isCancelled = false,
+    this.isMoved = false,
     this.originalSubject,
     this.originalRoom,
     this.originalClassName,
@@ -43,6 +48,7 @@ class Lesson {
       isSubstitution: (json['isSubstitution'] as bool?) ?? false,
       isDuty: (json['isDuty'] as bool?) ?? false,
       isCancelled: (json['isCancelled'] as bool?) ?? false,
+      isMoved: (json['isMoved'] as bool?) ?? false,
       originalSubject: json['originalSubject'] as String?,
       originalRoom: json['originalRoom'] as String?,
       originalClassName: json['originalClassName'] as String?,
@@ -73,6 +79,7 @@ class Lesson {
       'isSubstitution': isSubstitution,
       'isDuty': isDuty,
       'isCancelled': isCancelled,
+      'isMoved': isMoved,
       if (originalSubject != null) 'originalSubject': originalSubject,
       if (originalRoom != null) 'originalRoom': originalRoom,
       if (originalClassName != null) 'originalClassName': originalClassName,

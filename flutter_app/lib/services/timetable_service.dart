@@ -2385,10 +2385,9 @@ class TimetableService {
         subject = 'Dyżur';
         room = cellText; // location used as "room"
         className = '';
-        isSubstitution = rowCells.any(
-          (c) => c.text.toLowerCase().contains('zastępstwo') ||
-              c.text.toLowerCase().contains('zastepstwo'),
-        );
+        final dutyRowText = rowCells.map((c) => c.text).join(' ');
+        isSubstitution = _looksLikeSubstitutionKeyword(dutyRowText);
+        isMoved = !isSubstitution && _looksLikeMoveKeyword(dutyRowText);
       } else if (isStruckThrough) {
         // First <div class="text"> holds the cancelled lesson, second (if
         // present) holds the new lesson replacing it (a "zastępstwo"). The
@@ -2487,10 +2486,9 @@ class TimetableService {
       if (!seen.add(key)) continue;
 
       final rowCells = cell.parent?.querySelectorAll('td') ?? [];
-      final isSubstitutionDuty = rowCells.any(
-        (c) => c.text.toLowerCase().contains('zastępstwo') ||
-            c.text.toLowerCase().contains('zastepstwo'),
-      );
+      final dutyRowText = rowCells.map((c) => c.text).join(' ');
+      final isSubstitutionDuty = _looksLikeSubstitutionKeyword(dutyRowText);
+      final isMovedDuty = !isSubstitutionDuty && _looksLikeMoveKeyword(dutyRowText);
 
       result[dayKey]!.add(Lesson.fromJson({
         'start': timeFrom,
@@ -2500,6 +2498,7 @@ class TimetableService {
         'className': '',
         'isDuty': true,
         'isSubstitution': isSubstitutionDuty,
+        'isMoved': isMovedDuty,
       }));
       dutyCellsParsed++;
 
@@ -2529,10 +2528,9 @@ class TimetableService {
       final key = '$dayKey|$timeFrom|$timeTo|dyżur|${location.toLowerCase()}|';
       if (!seen.add(key)) continue;
 
-      final isSubstitutionDuty = cols.any(
-        (c) => c.text.toLowerCase().contains('zastępstwo') ||
-            c.text.toLowerCase().contains('zastepstwo'),
-      );
+      final dutyColsText = cols.map((c) => c.text).join(' ');
+      final isSubstitutionDuty = _looksLikeSubstitutionKeyword(dutyColsText);
+      final isMovedDuty = !isSubstitutionDuty && _looksLikeMoveKeyword(dutyColsText);
 
       result[dayKey]!.add(Lesson.fromJson({
         'start': timeFrom,
@@ -2542,6 +2540,7 @@ class TimetableService {
         'className': '',
         'isDuty': true,
         'isSubstitution': isSubstitutionDuty,
+        'isMoved': isMovedDuty,
       }));
       dutyRowsParsed++;
 
@@ -2581,20 +2580,31 @@ class TimetableService {
     String badgeText, {
     required bool hasReplacementLesson,
   }) {
-    final badge = badgeText.toLowerCase();
-    final isRealSubstitution = badge.contains('zastępstwo') || badge.contains('zastepstwo');
-    final isRealMove = badge.contains('przesunięcie') || badge.contains('przesuniecie');
-
-    if (isRealSubstitution) {
+    if (_looksLikeSubstitutionKeyword(badgeText)) {
       return (isSubstitution: true, isMoved: false, isCancelled: false);
     }
-    if (isRealMove) {
+    if (_looksLikeMoveKeyword(badgeText)) {
       return (isSubstitution: false, isMoved: true, isCancelled: false);
     }
     // No badge match: when there's a replacement lesson shown, fall back to
     // treating it as a substitution (the old, pre-badge-check behaviour);
     // with no replacement, it's a plain cancellation.
     return (isSubstitution: hasReplacementLesson, isMoved: false, isCancelled: !hasReplacementLesson);
+  }
+
+  /// True when [text] contains Librus's "zastępstwo" wording (a colleague
+  /// covering the class), in its accented or ASCII-fallback spelling.
+  static bool _looksLikeSubstitutionKeyword(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('zastępstwo') || lower.contains('zastepstwo');
+  }
+
+  /// True when [text] contains Librus's "przesunięcie" wording (the same
+  /// lesson shifted to a different slot, no colleague involved), in its
+  /// accented or ASCII-fallback spelling.
+  static bool _looksLikeMoveKeyword(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('przesunięcie') || lower.contains('przesuniecie');
   }
 
   /// Extracts the class name from a div.text content.

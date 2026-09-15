@@ -95,7 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _now = DateTime.now();
   String? _role;
   String? _appVersion;
-  final GlobalKey _screenshotBoundaryKey = GlobalKey();
 
   static const _weekdays = ['', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
   static const _dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
@@ -285,32 +284,75 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<Uint8List?> _captureScreenshot() async {
+  // Renderuje cały dzisiejszy plan (niezależnie od tego, ile z niego mieści
+  // się aktualnie na ekranie) w niewidocznym miejscu, żeby zrobić z niego
+  // zrzut — zwykły RepaintBoundary na widocznym ciele ekranu łapałby tylko
+  // to, co akurat zmieściło się w viewporcie.
+  Future<Uint8List?> _captureDaySchedule() async {
+    final todayTimeline = _buildTimeline(_todayLessons);
+    if (todayTimeline.isEmpty) return null;
+
+    final overlay = Overlay.of(context, rootOverlay: true);
+    final boundaryKey = GlobalKey();
+    final width = MediaQuery.of(context).size.width;
+
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => Positioned(
+        left: -width - 100,
+        top: 0,
+        child: Material(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: RepaintBoundary(
+            key: boundaryKey,
+            child: SizedBox(
+              width: width,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _dayNames[_todayKey] ?? '',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final block in todayTimeline) _buildScheduleBlock(block),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    // Overlay potrzebuje paru klatek, żeby się faktycznie zbudować i narysować.
+    await WidgetsBinding.instance.endOfFrame;
+    await WidgetsBinding.instance.endOfFrame;
+
     try {
-      final boundary = _screenshotBoundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary = boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) return null;
       final image = await boundary.toImage(pixelRatio: 2.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       return byteData?.buffer.asUint8List();
     } catch (_) {
       return null;
+    } finally {
+      entry.remove();
     }
   }
 
   Future<void> _openIdeaDialog() async {
-    // Zrzut robimy przed otwarciem dialogu, żeby pokazywał plan lekcji,
-    // a nie sam dialog nałożony na ekran.
-    final screenshotBytes = await _captureScreenshot();
-    final savedUsername = await widget.timetableService.getSavedUsername();
+    final screenshotBytes = await _captureDaySchedule();
     if (!mounted) return;
 
     final submission = await showDialog<_IdeaSubmission>(
       context: context,
-      builder: (dialogContext) => _IdeaDialog(
-        initialSignature: savedUsername ?? '',
-        screenshotBytes: screenshotBytes,
-      ),
+      builder: (dialogContext) => _IdeaDialog(screenshotBytes: screenshotBytes),
     );
 
     if (submission == null || submission.description.isEmpty) return;
@@ -422,15 +464,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: RepaintBoundary(
-        key: _screenshotBoundaryKey,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _loadTimetable,
-                child: _buildContent(),
-              ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadTimetable,
+              child: _buildContent(),
+            ),
     );
   }
 
@@ -1244,9 +1283,8 @@ class _IdeaSubmission {
 }
 
 class _IdeaDialog extends StatefulWidget {
-  const _IdeaDialog({required this.initialSignature, this.screenshotBytes});
+  const _IdeaDialog({this.screenshotBytes});
 
-  final String initialSignature;
   final Uint8List? screenshotBytes;
 
   @override
@@ -1254,8 +1292,10 @@ class _IdeaDialog extends StatefulWidget {
 }
 
 class _IdeaDialogState extends State<_IdeaDialog> {
-  late final _descriptionController = TextEditingController();
-  late final _signatureController = TextEditingController(text: widget.initialSignature);
+  final _descriptionController = TextEditingController();
+  // Puste celowo: login do dziennika nic mi nie mówi, potrzebuję nazwiska,
+  // więc nauczyciel wpisuje je sam zamiast dostawać podpowiedź z loginu.
+  final _signatureController = TextEditingController();
   late bool _attachScreenshot = widget.screenshotBytes != null;
 
   @override
@@ -1300,8 +1340,8 @@ class _IdeaDialogState extends State<_IdeaDialog> {
             TextField(
               controller: _signatureController,
               decoration: const InputDecoration(
-                labelText: 'Podpis',
-                hintText: 'Imię i nazwisko — ułatwi mi sprawdzenie Twojego planu',
+                labelText: 'Podpis (nazwisko)',
+                hintText: 'Wpisz swoje nazwisko, żebym wiedział, czyj plan sprawdzić',
                 border: OutlineInputBorder(),
               ),
             ),

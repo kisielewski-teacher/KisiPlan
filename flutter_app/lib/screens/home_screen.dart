@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:kisiplan/models/lesson.dart';
 import 'package:kisiplan/services/notification_service.dart';
 import 'package:kisiplan/services/timetable_service.dart';
 import 'package:kisiplan/services/update_service.dart';
 import 'package:kisiplan/services/widget_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Adres, na który trafiają pomysły użytkowników zgłoszone z aplikacji.
@@ -90,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _now = DateTime.now();
   String? _role;
   String? _appVersion;
+  final GlobalKey _screenshotBoundaryKey = GlobalKey();
 
   static const _weekdays = ['', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
   static const _dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
@@ -279,55 +285,77 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<Uint8List?> _captureScreenshot() async {
+    try {
+      final boundary = _screenshotBoundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _openIdeaDialog() async {
-    final controller = TextEditingController();
-    final idea = await showDialog<String>(
+    // Zrzut robimy przed otwarciem dialogu, żeby pokazywał plan lekcji,
+    // a nie sam dialog nałożony na ekran.
+    final screenshotBytes = await _captureScreenshot();
+    final savedUsername = await widget.timetableService.getSavedUsername();
+    if (!mounted) return;
+
+    final submission = await showDialog<_IdeaSubmission>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Prześlij pomysł'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 5,
-          minLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Opisz swój pomysł na aplikację...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Wyślij'),
-          ),
-        ],
+      builder: (dialogContext) => _IdeaDialog(
+        initialSignature: savedUsername ?? '',
+        screenshotBytes: screenshotBytes,
       ),
     );
 
-    if (idea == null || idea.isEmpty) return;
-    await _sendIdea(idea);
+    if (submission == null || submission.description.isEmpty) return;
+    await _sendIdea(submission);
   }
 
-  Future<void> _sendIdea(String idea) async {
+  Future<void> _sendIdea(_IdeaSubmission submission) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final body = submission.signature.isEmpty
+        ? submission.description
+        : '${submission.description}\n\n— ${submission.signature}';
+
+    if (submission.screenshotBytes != null) {
+      try {
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/plan_mechanika_zgloszenie.png');
+        await file.writeAsBytes(submission.screenshotBytes!);
+        await SharePlus.instance.share(
+          ShareParams(
+            text: body,
+            subject: 'Pomysł/błąd na Plan Mechanika',
+            files: [XFile(file.path)],
+          ),
+        );
+        return;
+      } catch (_) {
+        // Spadamy do mailto poniżej, jeśli udostępnianie pliku się nie uda.
+      }
+    }
+
     final uri = Uri(
       scheme: 'mailto',
       path: _feedbackEmail,
-      query: 'subject=${Uri.encodeComponent('Pomysł na Plan Mechanika')}'
-          '&body=${Uri.encodeComponent(idea)}',
+      query: 'subject=${Uri.encodeComponent('Pomysł/błąd na Plan Mechanika')}'
+          '&body=${Uri.encodeComponent(body)}',
     );
 
     final launched = await launchUrl(uri);
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           launched
-              ? 'Otwarto aplikację pocztową z Twoim pomysłem.'
+              ? 'Otwarto aplikację pocztową z Twoim zgłoszeniem.'
               : 'Nie udało się otworzyć aplikacji pocztowej.',
         ),
       ),
@@ -381,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (_role != 'student')
             IconButton(
               icon: const Icon(Icons.lightbulb_outline),
-              tooltip: 'Prześlij pomysł',
+              tooltip: 'Prześlij pomysł / zgłoś błąd',
               onPressed: _openIdeaDialog,
             ),
           IconButton(
@@ -394,12 +422,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadTimetable,
-              child: _buildContent(),
-            ),
+      body: RepaintBoundary(
+        key: _screenshotBoundaryKey,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadTimetable,
+                child: _buildContent(),
+              ),
+      ),
     );
   }
 
@@ -1197,5 +1228,115 @@ class _UpdateDialogState extends State<_UpdateDialog> {
           ),
         ];
     }
+  }
+}
+
+class _IdeaSubmission {
+  const _IdeaSubmission({
+    required this.signature,
+    required this.description,
+    this.screenshotBytes,
+  });
+
+  final String signature;
+  final String description;
+  final Uint8List? screenshotBytes;
+}
+
+class _IdeaDialog extends StatefulWidget {
+  const _IdeaDialog({required this.initialSignature, this.screenshotBytes});
+
+  final String initialSignature;
+  final Uint8List? screenshotBytes;
+
+  @override
+  State<_IdeaDialog> createState() => _IdeaDialogState();
+}
+
+class _IdeaDialogState extends State<_IdeaDialog> {
+  late final _descriptionController = TextEditingController();
+  late final _signatureController = TextEditingController(text: widget.initialSignature);
+  late bool _attachScreenshot = widget.screenshotBytes != null;
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _signatureController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final description = _descriptionController.text.trim();
+    if (description.isEmpty) return;
+    Navigator.of(context).pop(
+      _IdeaSubmission(
+        signature: _signatureController.text.trim(),
+        description: description,
+        screenshotBytes: _attachScreenshot ? widget.screenshotBytes : null,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Prześlij pomysł / zgłoś błąd'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _descriptionController,
+              autofocus: true,
+              maxLines: 5,
+              minLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Opisz swój pomysł lub napotkany błąd...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _signatureController,
+              decoration: const InputDecoration(
+                labelText: 'Podpis',
+                hintText: 'Imię i nazwisko — ułatwi mi sprawdzenie Twojego planu',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            if (widget.screenshotBytes != null) ...[
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _attachScreenshot,
+                onChanged: (value) => setState(() => _attachScreenshot = value ?? false),
+                title: const Text('Dołącz zrzut ekranu planu lekcji'),
+              ),
+              if (_attachScreenshot)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    widget.screenshotBytes!,
+                    height: 140,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Wyślij'),
+        ),
+      ],
+    );
   }
 }

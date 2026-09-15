@@ -57,4 +57,23 @@ void main() {
       expect(result.isMoved, isFalse);
     });
   });
+
+  group('TimetableService.isOkienkoPlaceholder', () {
+    // Regression: when a moved-away lesson's original slot is struck through
+    // in the dziennik with "Okienko" as the "replacement" text, that's not a
+    // real substituted/moved-in lesson — it's Librus spelling out that the
+    // slot is now free time. The struck-through original should be shown
+    // with the "Okienko" tag instead of being treated as a substitution.
+    test('recognizes "Okienko" regardless of casing/whitespace', () {
+      expect(TimetableService.isOkienkoPlaceholder('Okienko'), isTrue);
+      expect(TimetableService.isOkienkoPlaceholder('okienko'), isTrue);
+      expect(TimetableService.isOkienkoPlaceholder('  Okienko  '), isTrue);
+      expect(TimetableService.isOkienkoPlaceholder('OKIENKO'), isTrue);
+    });
+
+    test('does not match a real subject that merely contains the word', () {
+      expect(TimetableService.isOkienkoPlaceholder('Fizyka - 2eBsp BS4 s.302'), isFalse);
+      expect(TimetableService.isOkienkoPlaceholder(''), isFalse);
+    });
+  });
 }

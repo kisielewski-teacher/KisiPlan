@@ -2405,17 +2405,34 @@ class TimetableService {
         final classification = classifyChangeBadge(badge, hasReplacementLesson: textDivs.length >= 2);
 
         if (textDivs.length >= 2) {
-          isSubstitution = classification.isSubstitution;
-          isMoved = classification.isMoved;
           final origText = textDivs[0].text.trim();
-          originalSubject = textDivs[0].querySelector('b')?.text.trim() ?? '';
-          originalRoom = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(origText)?.group(1) ?? '';
-          originalClassName = _extractClassName(origText);
+          final origSubject = textDivs[0].querySelector('b')?.text.trim() ?? '';
+          final origRoom = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(origText)?.group(1) ?? '';
+          final origClassName = _extractClassName(origText);
 
           final newText = textDivs[1].text.trim();
-          subject = textDivs[1].querySelector('b')?.text.trim() ?? newText;
-          room = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(newText)?.group(1) ?? '';
-          className = _extractClassName(newText);
+
+          if (isOkienkoPlaceholder(newText)) {
+            // The second div isn't a real replacement lesson \u2014 Librus is
+            // just spelling out that the original slot is now free time.
+            // Show the original (struck through) lesson with the "Okienko"
+            // tag, the same as a plain cancellation, instead of treating
+            // "Okienko" itself as a substituted/moved-in subject.
+            isCancelled = true;
+            subject = origSubject.isNotEmpty ? origSubject : origText;
+            room = origRoom;
+            className = origClassName;
+          } else {
+            isSubstitution = classification.isSubstitution;
+            isMoved = classification.isMoved;
+            originalSubject = origSubject;
+            originalRoom = origRoom;
+            originalClassName = origClassName;
+
+            subject = textDivs[1].querySelector('b')?.text.trim() ?? newText;
+            room = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(newText)?.group(1) ?? '';
+            className = _extractClassName(newText);
+          }
         } else {
           // Only one div.text: either a plain cancellation, or a colleague's
           // lesson substituted into what was previously free time for this
@@ -2606,6 +2623,12 @@ class TimetableService {
     final lower = text.toLowerCase();
     return lower.contains('przesunięcie') || lower.contains('przesuniecie');
   }
+
+  /// True when a struck-through cell's "replacement" text is just Librus
+  /// spelling out that the slot is now free time ("Okienko"), rather than a
+  /// real lesson that substituted in or was moved in. Public/static so it
+  /// can be unit tested without the full HTML parser.
+  static bool isOkienkoPlaceholder(String replacementText) => replacementText.trim().toLowerCase() == 'okienko';
 
   /// Extracts the class name from a div.text content.
   /// Format: "Subject- ClassName [group]  s. Room"

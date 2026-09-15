@@ -60,7 +60,7 @@ class BackgroundSyncService {
       for (final l in lessons) {
         result.add(
           '$day|${l.startString}|${l.endString}|${l.subject}|${l.room}|${l.className}|'
-          '${l.isSubstitution}|${l.isDuty}|${l.isCancelled}|${l.isMoved}',
+          '${l.isSubstitution}|${l.isDuty}|${l.isCancelled}|${l.isMoved}|${l.isVacated}',
         );
       }
     });

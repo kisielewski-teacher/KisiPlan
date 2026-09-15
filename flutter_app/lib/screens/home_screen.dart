@@ -563,7 +563,7 @@ class _HomeScreenState extends State<HomeScreen> {
       cardColor = Colors.blue.shade50;
     } else if (lesson.isDuty) {
       cardColor = Colors.purple.shade50;
-    } else if (lesson.isCancelled) {
+    } else if (lesson.isCancelled || lesson.isVacated) {
       cardColor = Colors.grey.shade200;
     } else if (isChange) {
       cardColor = Colors.orange.shade50;
@@ -614,6 +614,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 4),
                   _buildTag('Okienko', Colors.blueGrey, compact: compact),
+                ],
+              )
+            : lesson.isVacated
+            // The slot this lesson used to occupy before it moved/was
+            // substituted away entirely — struck through, tagged with the
+            // reason, but (unlike isFullSubstitution) with no replacement
+            // to show below it, since the replacement lives in a different
+            // cell (a different time, sometimes a different day).
+            ? Row(
+                children: [
+                  Icon(changeIcon, size: 15, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      lesson.subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                        fontSize: compact ? 13 : 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  _buildTag(changeLabel, changeColor, compact: compact),
                 ],
               )
             : isFullSubstitution
@@ -725,7 +751,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
         subtitle: isFullSubstitution
             ? null
-            : lesson.isCancelled
+            : (lesson.isCancelled || lesson.isVacated)
             ? (lesson.className.isNotEmpty
                 ? Text(
                     lesson.className,
@@ -743,7 +769,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ? null
             : lesson.isDuty
             ? _roomTrailing(lesson.room, compact: compact)
-            : lesson.isCancelled
+            : (lesson.isCancelled || lesson.isVacated)
             ? _roomTrailing('sala ${lesson.room}', compact: compact, strikeThrough: true)
             : _roomTrailing('sala ${lesson.room}', compact: compact),
       ),

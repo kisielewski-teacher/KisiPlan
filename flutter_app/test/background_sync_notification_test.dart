@@ -16,7 +16,7 @@ Set<String> signature(Map<String, List<Lesson>> timetable) {
     for (final l in lessons) {
       result.add(
         '$day|${l.startString}|${l.endString}|${l.subject}|${l.room}|${l.className}|'
-        '${l.isSubstitution}|${l.isDuty}|${l.isCancelled}|${l.isMoved}',
+        '${l.isSubstitution}|${l.isDuty}|${l.isCancelled}|${l.isMoved}|${l.isVacated}',
       );
     }
   });
@@ -39,6 +39,7 @@ Lesson _lesson(
   bool isDuty = false,
   bool isCancelled = false,
   bool isMoved = false,
+  bool isVacated = false,
 }) {
   return Lesson.fromJson({
     'start': start,
@@ -50,6 +51,7 @@ Lesson _lesson(
     'isDuty': isDuty,
     'isCancelled': isCancelled,
     'isMoved': isMoved,
+    'isVacated': isVacated,
   });
 }
 
@@ -96,6 +98,13 @@ void main() {
       final after = {'monday': [_lesson('08:00', '08:45', isMoved: true)]};
       expect(sameTimetable(before, after), isFalse,
           reason: 'the signature includes isMoved, so a fresh "przesunięcie" must be detected');
+    });
+
+    test('a moved lesson\'s slot flipping to vacated triggers a notification', () {
+      final before = {'monday': [_lesson('14:20', '15:05', isMoved: true)]};
+      final after = {'monday': [_lesson('14:20', '15:05', isMoved: true, isVacated: true)]};
+      expect(sameTimetable(before, after), isFalse,
+          reason: 'the signature includes isVacated, so the slot becoming struck-through must be detected');
     });
 
     test('a room change alone triggers a notification', () {

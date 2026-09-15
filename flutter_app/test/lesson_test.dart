@@ -99,6 +99,25 @@ void main() {
       expect(roundTripped.isSubstitution, isFalse);
     });
 
+    test('a moved lesson\'s vacated slot round-trips isMoved + isVacated together', () {
+      final lesson = Lesson.fromJson({
+        'start': '14:20',
+        'end': '15:05',
+        'subject': 'Fizyka',
+        'room': '302',
+        'className': '2eBsp BS4',
+        'isMoved': true,
+        'isVacated': true,
+      });
+
+      expect(lesson.isMoved, isTrue);
+      expect(lesson.isVacated, isTrue);
+      expect(lesson.isCancelled, isFalse);
+      final roundTripped = Lesson.fromJson(lesson.toJson());
+      expect(roundTripped.isMoved, isTrue);
+      expect(roundTripped.isVacated, isTrue);
+    });
+
     test('toJson omits substitution fields when null', () {
       final lesson = Lesson(
         start: const TimeOfDay(hour: 8, minute: 0),

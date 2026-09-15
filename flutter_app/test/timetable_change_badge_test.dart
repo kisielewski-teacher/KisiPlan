@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:html/parser.dart' as html_parser;
 import 'package:kisiplan/services/timetable_service.dart';
 
 // Regression test for a mismatch between the dziennik (Librus) and the app:
@@ -74,6 +75,51 @@ void main() {
     test('does not match a real subject that merely contains the word', () {
       expect(TimetableService.isOkienkoPlaceholder('Fizyka - 2eBsp BS4 s.302'), isFalse);
       expect(TimetableService.isOkienkoPlaceholder(''), isFalse);
+    });
+  });
+
+  group('TimetableService.isEntirelyStruckThrough', () {
+    // Regression: a "przesunięcie" pair's VACATED slot (real markup pulled
+    // from the live dziennik, 2026-09-15) renders as a single div.text whose
+    // entire content is wrapped in one <s> — the lesson used to happen here
+    // but now happens in a completely different cell (different time). That
+    // cell was rendering with no strikethrough at all before this fix,
+    // because the parser only recognized two separate div.text elements
+    // (original + replacement) in the SAME cell as a "there's an original to
+    // show struck through" signal — a pattern that, empirically, never
+    // actually occurs for this real dziennik markup.
+    test('true when the div\'s only child is a single <s> wrapping everything', () {
+      final doc = html_parser.parse(
+        '<div class="text"><s><b>Fizyka</b><br>- 2eBsp&nbsp;BS4&nbsp;&nbsp;s.&nbsp;302</s></div>',
+      );
+      final div = doc.querySelector('div.text')!;
+
+      expect(TimetableService.isEntirelyStruckThrough(div), isTrue);
+    });
+
+    test('false for the destination cell: same lesson, not struck through', () {
+      final doc = html_parser.parse(
+        '<div class="text"><b>Fizyka</b><br>- 2eBsp&nbsp;BS4 Marcin Kisielewski&nbsp;&nbsp;s.&nbsp;302</div>',
+      );
+      final div = doc.querySelector('div.text')!;
+
+      expect(TimetableService.isEntirelyStruckThrough(div), isFalse);
+    });
+
+    test('false when only part of the div is struck through (two separate pieces)', () {
+      final doc = html_parser.parse(
+        '<div class="text"><s>Matematyka - 3A</s> <b>Fizyka</b> - 3A s. 12</div>',
+      );
+      final div = doc.querySelector('div.text')!;
+
+      expect(TimetableService.isEntirelyStruckThrough(div), isFalse);
+    });
+
+    test('false for an empty div', () {
+      final doc = html_parser.parse('<div class="text"></div>');
+      final div = doc.querySelector('div.text')!;
+
+      expect(TimetableService.isEntirelyStruckThrough(div), isFalse);
     });
   });
 }

@@ -15,6 +15,11 @@ class Lesson {
   // lesson shifted to a different slot) rather than "zastępstwo" (a
   // substitution). Mutually exclusive with isSubstitution.
   final bool isMoved;
+  // True for a moved/substituted lesson's own vacated slot: the lesson now
+  // happens in a different cell entirely (a different time, sometimes a
+  // different day), and this entry just shows what used to happen here,
+  // struck through, with nothing else taking its place at this slot.
+  final bool isVacated;
   // Non-null only when isSubstitution or isMoved == true — the lesson that was cancelled
   final String? originalSubject;
   final String? originalRoom;
@@ -30,6 +35,7 @@ class Lesson {
     this.isDuty = false,
     this.isCancelled = false,
     this.isMoved = false,
+    this.isVacated = false,
     this.originalSubject,
     this.originalRoom,
     this.originalClassName,
@@ -49,6 +55,7 @@ class Lesson {
       isDuty: (json['isDuty'] as bool?) ?? false,
       isCancelled: (json['isCancelled'] as bool?) ?? false,
       isMoved: (json['isMoved'] as bool?) ?? false,
+      isVacated: (json['isVacated'] as bool?) ?? false,
       originalSubject: json['originalSubject'] as String?,
       originalRoom: json['originalRoom'] as String?,
       originalClassName: json['originalClassName'] as String?,
@@ -80,6 +87,7 @@ class Lesson {
       'isDuty': isDuty,
       'isCancelled': isCancelled,
       'isMoved': isMoved,
+      'isVacated': isVacated,
       if (originalSubject != null) 'originalSubject': originalSubject,
       if (originalRoom != null) 'originalRoom': originalRoom,
       if (originalClassName != null) 'originalClassName': originalClassName,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 import 'package:kisiplan/models/lesson.dart';
@@ -2376,6 +2377,11 @@ class TimetableService {
       bool isSubstitution = false;
       bool isCancelled = false;
       bool isMoved = false;
+      // True for a lesson's own vacated slot: the lesson moved to a
+      // different cell entirely (a different time, sometimes a different
+      // day) and this cell just shows what used to happen here, struck
+      // through, with nothing else taking its place in this same cell.
+      bool isVacated = false;
       String? originalSubject;
       String? originalRoom;
       String? originalClassName;
@@ -2434,12 +2440,18 @@ class TimetableService {
             className = _extractClassName(newText);
           }
         } else {
-          // Only one div.text: either a plain cancellation, or a colleague's
-          // lesson substituted into what was previously free time for this
-          // teacher (e.g. tooltip "Nauczyciel: \u015alufarski Marcin -> Kisielewski
-          // Marcin") \u2014 there's no "original" lesson of ours here to show
-          // struck through, just the new one filling the gap.
+          // Only one div.text. Two distinct real-world shapes end up here:
+          //  - a colleague's lesson substituted into what was previously
+          //    free time for this teacher \u2014 there's no "original" lesson of
+          //    ours to show struck through, just the new one filling the gap.
+          //  - a "przesuni\u0119cie" pair's VACATED slot: the moved-to slot is a
+          //    completely separate cell (a different time, sometimes even a
+          //    different day) that shows the lesson normally with no <s> at
+          //    all, while THIS cell's single div.text wraps its *entire*
+          //    content in <s> \u2014 the lesson that used to happen here, now
+          //    struck through, with nothing else replacing it in this cell.
           final source = textDivs.isNotEmpty ? textDivs[0] : cell;
+          final wholeDivStruck = isEntirelyStruckThrough(source);
           final text = source.text.trim();
           subject = source.querySelector('b')?.text.trim() ?? text;
           room = RegExp(r's\.[\s\u00a0]*([0-9a-zA-Z]+)').firstMatch(text)?.group(1) ?? '';
@@ -2448,6 +2460,7 @@ class TimetableService {
           isSubstitution = classification.isSubstitution;
           isMoved = classification.isMoved;
           isCancelled = classification.isCancelled;
+          isVacated = wholeDivStruck;
         }
       } else {
         subject = cell.querySelector('b')?.text.trim() ?? cellText;
@@ -2470,6 +2483,7 @@ class TimetableService {
         'isDuty': isDuty,
         'isCancelled': isCancelled,
         'isMoved': isMoved,
+        'isVacated': isVacated,
         if (originalSubject != null && originalSubject.isNotEmpty)
           'originalSubject': originalSubject,
         if (originalRoom != null && originalRoom.isNotEmpty)
@@ -2629,6 +2643,15 @@ class TimetableService {
   /// real lesson that substituted in or was moved in. Public/static so it
   /// can be unit tested without the full HTML parser.
   static bool isOkienkoPlaceholder(String replacementText) => replacementText.trim().toLowerCase() == 'okienko';
+
+  /// True when [div]'s entire content is wrapped in a single `<s>` element
+  /// — i.e. a "przesunięcie"/"zastępstwo" pair's *vacated* slot: the lesson
+  /// moved to a completely different cell (a different time, sometimes a
+  /// different day), and this cell's one div.text just shows what used to
+  /// happen here, struck through, with nothing replacing it in this same
+  /// cell. Public/static so it can be unit tested without the full parser.
+  static bool isEntirelyStruckThrough(dom.Element div) =>
+      div.children.length == 1 && div.children.first.localName == 's';
 
   /// Extracts the class name from a div.text content.
   /// Format: "Subject- ClassName [group]  s. Room"

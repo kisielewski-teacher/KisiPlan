@@ -65,6 +65,7 @@ class WidgetService {
 /// it's independently unit-testable.
 Lesson? findCurrentLesson(List<Lesson> lessons, int nowMinutes) {
   for (final lesson in lessons) {
+    if (lesson.isCancelled || lesson.isVacated) continue;
     if (nowMinutes >= lesson.startMinutes && nowMinutes < lesson.endMinutes) {
       return lesson;
     }
@@ -76,6 +77,7 @@ Lesson? findCurrentLesson(List<Lesson> lessons, int nowMinutes) {
 Lesson? findNextLesson(List<Lesson> lessons, int nowMinutes) {
   Lesson? next;
   for (final lesson in lessons) {
+    if (lesson.isCancelled || lesson.isVacated) continue;
     if (lesson.startMinutes > nowMinutes && (next == null || lesson.startMinutes < next.startMinutes)) {
       next = lesson;
     }

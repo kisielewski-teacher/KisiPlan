@@ -100,7 +100,14 @@ class NotificationService {
 
     tz.initializeTimeZones();
     final tzInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
+    try {
+      tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
+    } catch (_) {
+      // Some devices/emulators report zones the tz database doesn't know
+      // (e.g. "GMT"); this is a Polish school app, so fall back to Warsaw
+      // rather than crashing at startup.
+      tz.setLocalLocation(tz.getLocation('Europe/Warsaw'));
+    }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();

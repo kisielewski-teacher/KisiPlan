@@ -832,8 +832,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : null)
-            : lesson.className.isNotEmpty
-                ? Text(lesson.className, style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey))
+            : (lesson.className.isNotEmpty || (lesson.substituteTeacher?.isNotEmpty ?? false))
+                ? Text(
+                    [
+                      if (lesson.className.isNotEmpty) lesson.className,
+                      if (lesson.substituteTeacher?.isNotEmpty ?? false) 'zast. ${lesson.substituteTeacher}',
+                    ].join(' · '),
+                    style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey),
+                  )
                 : null,
         trailing: isFullSubstitution
             ? null

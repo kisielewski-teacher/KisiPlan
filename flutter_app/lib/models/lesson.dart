@@ -24,6 +24,8 @@ class Lesson {
   final String? originalSubject;
   final String? originalRoom;
   final String? originalClassName;
+  // Full name of the covering teacher, when the source exposes it (student REST API).
+  final String? substituteTeacher;
 
   Lesson({
     required this.start,
@@ -39,6 +41,7 @@ class Lesson {
     this.originalSubject,
     this.originalRoom,
     this.originalClassName,
+    this.substituteTeacher,
   });
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
@@ -59,6 +62,7 @@ class Lesson {
       originalSubject: json['originalSubject'] as String?,
       originalRoom: json['originalRoom'] as String?,
       originalClassName: json['originalClassName'] as String?,
+      substituteTeacher: json['substituteTeacher'] as String?,
     );
   }
 
@@ -91,6 +95,7 @@ class Lesson {
       if (originalSubject != null) 'originalSubject': originalSubject,
       if (originalRoom != null) 'originalRoom': originalRoom,
       if (originalClassName != null) 'originalClassName': originalClassName,
+      if (substituteTeacher != null) 'substituteTeacher': substituteTeacher,
     };
   }
 

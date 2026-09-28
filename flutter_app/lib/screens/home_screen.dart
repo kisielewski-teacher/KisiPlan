@@ -531,13 +531,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 mode: LaunchMode.externalApplication,
               ),
               child: const Text(
-                'Postaw mi kawę ☕',
+                'Postaw mi kawę (dobrowolny napiwek) ☕',
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey,
                   decoration: TextDecoration.underline,
                 ),
               ),
+            ),
+            const SizedBox(height: 4),
+            InkWell(
+              onTap: () => showLicensePage(
+                context: context,
+                applicationName: 'Plan Mechanika',
+                applicationVersion: _appVersion,
+              ),
+              child: const Text(
+                'Licencje open source',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Plan Mechanika to nieoficjalna, bezpłatna aplikacja, niezwiązana '
+              'z LIBRUS Sp. z o.o. Dane logowania są przechowywane wyłącznie '
+              'lokalnie na urządzeniu i służą jedynie do pobrania Twojego planu '
+              'lekcji z Synergii — nie są przekazywane innym podmiotom. Korzystanie '
+              'z aplikacji może być niezgodne z regulaminem serwisu Librus Synergia '
+              '(zakaz automatycznego pobierania danych) — korzystasz na własną '
+              'odpowiedzialność.',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -656,7 +684,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       lesson.subject,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: compact ? 13 : 14),
+                      style: TextStyle(
+                        decoration: isChange ? TextDecoration.lineThrough : null,
+                        fontSize: compact ? 13 : 14,
+                      ),
                     ),
                   ),
                   if (isChange) ...[
@@ -806,7 +837,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       lesson.subject,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: compact ? 13 : 14),
+                      style: TextStyle(
+                        decoration: TextDecoration.lineThrough,
+                        fontSize: compact ? 13 : 14,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -838,7 +872,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (lesson.className.isNotEmpty) lesson.className,
                       if (lesson.substituteTeacher?.isNotEmpty ?? false) 'zast. ${lesson.substituteTeacher}',
                     ].join(' · '),
-                    style: TextStyle(fontSize: compact ? 10 : 12, color: Colors.grey),
+                    style: TextStyle(
+                      decoration: isChange ? TextDecoration.lineThrough : null,
+                      fontSize: compact ? 10 : 12,
+                      color: Colors.grey,
+                    ),
                   )
                 : null,
         trailing: isFullSubstitution

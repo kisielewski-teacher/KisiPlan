@@ -7,9 +7,11 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 
 ### Kod
 
-- [ ] `timetable_service.dart` (3004 linie) – ogromny plik; wiele zagnieżdżonych prób logowania (SSO/portal/bearer/gateway),
-      **uwaga**: wg pamięci projektu łańcuch SSO „wygląda na martwy, ale nie jest” (zależność od `oauth_token`) –
-      NIE przycinać bez testu na żywo. Najpierw ustalić testami, co jest naprawdę nieużywane, dopiero potem czyścić.
+- [ ] `timetable_service.dart` (~3000 linii) – ogromny plik z łańcuchem logowania (SSO/portal/bearer/gateway). **Tylko ostrożnie**:
+      łańcucha logowania NIE ruszamy bez żywego testu przed i po na prawdziwych kontach (nauczyciel + uczeń) – ukryte zależności przez wspólny
+      stan (cookie `oauth_token` z kroku `portalSzkoly` jest potrzebny uczniowskiej ścieżce REST/gateway; wcześniejsze „przycięcie” dało 401).
+      Bezpieczne kroki, w kolejności: (1) mechaniczny podział pliku (parsowanie HTML/dyżurów, ciasteczka) na mniejsze pliki bez zmiany logiki, pod osłoną testów;
+      (2) dopiero potem, z kontem testowym ucznia i logami z telefonu/Windows, ustalić które gałęzie SSO naprawdę się wykonują.
 - [ ] `update_service.dart`: pobiera APK bez weryfikacji (tylko HTTPS z GitHuba; podpis sprawdza Android). Dodać
       sprawdzenie sumy SHA-256 z notatek wydania? (opcjonalnie, zależne od decyzji o kluczu)
 - [ ] Brak testów samego logowania do Librusa (`TimetableService.login`, łańcuch SSO) – wymaga makiety odpowiedzi serwera; testy na żywo robimy ręcznie.

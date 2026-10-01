@@ -132,6 +132,16 @@ class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
     return null;
   }
 
+  Future<void> _forgetSavedLogin() async {
+    await _service.forgetBiometricVault();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _canUseBiometric = false;
+    });
+  }
+
   Future<void> _logout(bool rememberForBiometric) async {
     await _service.logout(rememberForBiometric: rememberForBiometric);
     final vault = await _service.readBiometricVault();
@@ -175,6 +185,7 @@ class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
         initialRole: _initialRole,
         canUseBiometric: _canUseBiometric,
         onBiometricFill: _biometricFill,
+        onForgetSavedLogin: _forgetSavedLogin,
       );
     }
 

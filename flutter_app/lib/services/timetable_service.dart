@@ -151,6 +151,8 @@ class TimetableService {
   Future<({String username, String password, String role})?> readBiometricVault() =>
       _secureStorage.readBiometricVault();
 
+  Future<void> forgetBiometricVault() => _secureStorage.clearBiometricVault();
+
   Future<String?> login(
     String username,
     String password, {

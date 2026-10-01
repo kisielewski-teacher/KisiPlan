@@ -8,6 +8,7 @@ class LoginScreen extends StatefulWidget {
     this.initialRole = 'teacher',
     this.canUseBiometric = false,
     this.onBiometricFill,
+    this.onForgetSavedLogin,
   });
 
   final Future<String?> Function(String username, String password, String role) onLogin;
@@ -20,11 +21,13 @@ class LoginScreen extends StatefulWidget {
   /// [onBiometricFill], which does the real authenticate-then-fetch work.
   final bool canUseBiometric;
 
-  /// Runs device biometric auth, then returns the saved credentials to fill
-  /// into the form (or null if auth failed/was cancelled). This never
-  /// submits the login itself — it only saves the user from retyping the
-  /// password by hand; they still confirm with the normal "Zaloguj" button.
+  /// Runs device biometric auth, then returns the saved credentials (or null
+  /// if auth failed/was cancelled). The login screen fills the form with them
+  /// and signs in right away.
   final Future<({String username, String password, String role})?> Function()? onBiometricFill;
+
+  /// Deletes the login kept for biometric sign-in (shared phone, new account).
+  final Future<void> Function()? onForgetSavedLogin;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -64,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordController.text = creds.password;
       _role = creds.role;
     });
+    await _submit();
   }
 
   Future<void> _submit() async {
@@ -141,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       suffixIcon: widget.canUseBiometric
                           ? IconButton(
                               icon: const Icon(Icons.fingerprint),
-                              tooltip: 'Wypełnij zapisanym hasłem',
+                              tooltip: 'Zaloguj odciskiem palca',
                               onPressed: _fillWithBiometric,
                             )
                           : null,
@@ -167,6 +171,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Icon(Icons.login),
                     label: const Text('Zaloguj'),
                   ),
+                  if (widget.canUseBiometric && widget.onForgetSavedLogin != null) ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _loading ? null : widget.onForgetSavedLogin,
+                      child: const Text('Zapomnij zapisany login i hasło'),
+                    ),
+                  ],
                 ],
               ),
             ),

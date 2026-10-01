@@ -239,36 +239,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleLogout() async {
-    var remember = false;
-    if (widget.canRememberForBiometric) {
-      final choice = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Wylogować?'),
-          content: const Text(
-            'Czy zapamiętać login i hasło, żeby następnym razem zalogować się odciskiem palca (lub PIN-em telefonu)? '
-            'Dane zostają tylko na tym telefonie, w bezpiecznym magazynie.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Anuluj'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Nie zapamiętuj'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Zapamiętaj'),
-            ),
-          ],
-        ),
-      );
-      if (choice == null) return;
-      remember = choice;
-    }
-    await widget.onLogout(remember);
+    // With biometrics on the device the login is kept (in the secure
+    // biometric vault) so the login screen can sign in with a fingerprint.
+    await widget.onLogout(widget.canRememberForBiometric);
   }
 
   /// Colors the update icon from cache immediately, then — at most once

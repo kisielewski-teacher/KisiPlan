@@ -138,6 +138,15 @@ class UpdateService {
     final version = prefs.getString(_prefsVersion);
     final url = prefs.getString(_prefsUrl);
     if (version == null || url == null) return null;
+    // The cache outlives an install: right after updating, it still names the
+    // version we just installed, so re-check it against the running version.
+    final currentVersion = (await PackageInfo.fromPlatform()).version;
+    if (!_isNewer(version, currentVersion)) {
+      await prefs.remove(_prefsVersion);
+      await prefs.remove(_prefsUrl);
+      await prefs.remove(_prefsNotes);
+      return null;
+    }
     return UpdateInfo(version: version, downloadUrl: url, releaseNotes: prefs.getString(_prefsNotes) ?? '');
   }
 

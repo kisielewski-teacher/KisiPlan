@@ -1,7 +1,7 @@
 name: plan_mechanika
 description: Aplikacja planu lekcji dla uczniów i nauczycieli
 publish_to: 'none'
-version: 1.4.36+45
+version: 1.4.37+46
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

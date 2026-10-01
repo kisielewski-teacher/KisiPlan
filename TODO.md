@@ -12,7 +12,7 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
       NIE przycinać bez testu na żywo. Najpierw ustalić testami, co jest naprawdę nieużywane, dopiero potem czyścić.
 - [ ] `update_service.dart`: pobiera APK bez weryfikacji (tylko HTTPS z GitHuba; podpis sprawdza Android). Dodać
       sprawdzenie sumy SHA-256 z notatek wydania? (opcjonalnie, zależne od decyzji o kluczu)
-- [ ] Brak testów dla `update_service`, `login`, `secure_storage` (testowane są głównie model/powiadomienia/widget).
+- [ ] Brak testów samego logowania do Librusa (`TimetableService.login`, łańcuch SSO) – wymaga makiety odpowiedzi serwera; testy na żywo robimy ręcznie.
 
 ### Zależności i licencje
 

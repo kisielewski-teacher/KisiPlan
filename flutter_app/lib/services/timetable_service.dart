@@ -148,6 +148,9 @@ class TimetableService {
 
   Future<String?> getSavedRole() => _secureStorage.readRole();
 
+  Future<({String username, String password, String role})?> readBiometricVault() =>
+      _secureStorage.readBiometricVault();
+
   Future<String?> login(
     String username,
     String password, {
@@ -220,6 +223,7 @@ class TimetableService {
 
       _sessionCookies = _cookieHeader(cookieJar);
       await _secureStorage.saveCredentials(username: username, password: password);
+      await _secureStorage.clearBiometricVault();
       await _secureStorage.saveRole(role);
       await _secureStorage.saveCookies(_sessionCookies!);
 
@@ -1643,10 +1647,27 @@ class TimetableService {
     return 'Brak zapisanych danych logowania.';
   }
 
-  Future<void> logout() async {
+  /// Clears the session, saved credentials and cached plan. With
+  /// [rememberForBiometric] the login is first copied to the biometric vault
+  /// so the login screen can refill it after a fingerprint check; otherwise
+  /// any earlier vault is wiped too.
+  Future<void> logout({bool rememberForBiometric = false}) async {
+    final creds = await _secureStorage.readCredentials();
+    final role = await _secureStorage.readRole();
     _sessionCookies = null;
     await _secureStorage.clearAll();
     await _db.clear();
+    if (rememberForBiometric &&
+        (creds.username?.isNotEmpty ?? false) &&
+        (creds.password?.isNotEmpty ?? false)) {
+      await _secureStorage.saveBiometricVault(
+        username: creds.username!,
+        password: creds.password!,
+        role: role ?? 'teacher',
+      );
+    } else {
+      await _secureStorage.clearBiometricVault();
+    }
   }
 
   Future<LoadResult> getTodayLessons() async {

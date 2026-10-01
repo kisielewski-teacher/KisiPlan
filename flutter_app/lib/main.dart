@@ -66,6 +66,7 @@ class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
   String? _initialUsername;
   String _initialRole = 'teacher';
   bool _canUseBiometric = false;
+  bool _biometricAvailable = false;
 
   @override
   void initState() {
@@ -92,27 +93,27 @@ class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
     // Only offer the fingerprint shortcut when there's actually a saved
     // password to fill in AND the device supports biometrics — otherwise
     // the button would just be a dead end.
-    final canUseBiometric = hasCreds && await _biometricAuth.isAvailable();
+    final biometricAvailable = await _biometricAuth.isAvailable();
+    final vault = await _service.readBiometricVault();
+    final canUseBiometric = biometricAvailable && vault != null;
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _initialUsername = username;
-      _initialRole = savedRole;
+      _initialUsername = username ?? vault?.username;
+      _initialRole = vault?.role ?? savedRole;
+      _biometricAvailable = biometricAvailable;
       _canUseBiometric = canUseBiometric;
       _loading = false;
     });
   }
 
-  Future<({String username, String password})?> _biometricFill() async {
+  Future<({String username, String password, String role})?> _biometricFill() async {
     final authenticated = await _biometricAuth.authenticate();
     if (!authenticated) return null;
-    final username = await _service.getSavedUsername();
-    final password = await _service.getSavedPassword();
-    if (username == null || password == null) return null;
-    return (username: username, password: password);
+    return _service.readBiometricVault();
   }
 
   Future<String?> _login(String username, String password, String role) async {
@@ -131,13 +132,17 @@ class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
     return null;
   }
 
-  Future<void> _logout() async {
-    await _service.logout();
+  Future<void> _logout(bool rememberForBiometric) async {
+    await _service.logout(rememberForBiometric: rememberForBiometric);
+    final vault = await _service.readBiometricVault();
     if (!mounted) {
       return;
     }
     setState(() {
       _loggedIn = false;
+      _canUseBiometric = _biometricAvailable && vault != null;
+      _initialUsername = vault?.username;
+      _initialRole = vault?.role ?? _initialRole;
     });
   }
 
@@ -160,6 +165,7 @@ class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
     } else if (_loggedIn) {
       home = HomeScreen(
         onLogout: _logout,
+        canRememberForBiometric: _biometricAvailable,
         timetableService: _service,
       );
     } else {

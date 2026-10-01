@@ -10,6 +10,14 @@ class SecureStorageService {
   static const _portalCookiesKey = 'auth_portal_cookies'; // portal.librus.pl cookies
   static const _lessonTimesKey = 'lesson_times'; // cached lesson period times
 
+  // Copy of the login kept after an explicit "remember for fingerprint"
+  // logout. Separate from the active credentials above, so a logged-out app
+  // has no session, no auto-login and no background sync - the vault is only
+  // ever read after a successful biometric prompt.
+  static const _vaultUsernameKey = 'bio_username';
+  static const _vaultPasswordKey = 'bio_password';
+  static const _vaultRoleKey = 'bio_role';
+
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<void> saveCredentials({
@@ -24,6 +32,30 @@ class SecureStorageService {
     final username = await _storage.read(key: _usernameKey);
     final password = await _storage.read(key: _passwordKey);
     return (username: username, password: password);
+  }
+
+  Future<void> saveBiometricVault({
+    required String username,
+    required String password,
+    required String role,
+  }) async {
+    await _storage.write(key: _vaultUsernameKey, value: username);
+    await _storage.write(key: _vaultPasswordKey, value: password);
+    await _storage.write(key: _vaultRoleKey, value: role);
+  }
+
+  Future<({String username, String password, String role})?> readBiometricVault() async {
+    final username = await _storage.read(key: _vaultUsernameKey);
+    final password = await _storage.read(key: _vaultPasswordKey);
+    if (username == null || password == null || username.isEmpty || password.isEmpty) return null;
+    final role = await _storage.read(key: _vaultRoleKey) ?? 'teacher';
+    return (username: username, password: password, role: role);
+  }
+
+  Future<void> clearBiometricVault() async {
+    await _storage.delete(key: _vaultUsernameKey);
+    await _storage.delete(key: _vaultPasswordKey);
+    await _storage.delete(key: _vaultRoleKey);
   }
 
   Future<void> saveToken(String token) async {

@@ -26,10 +26,12 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.onLogout,
+    this.canRememberForBiometric = false,
     required this.timetableService,
   });
 
-  final Future<void> Function() onLogout;
+  final Future<void> Function(bool rememberForBiometric) onLogout;
+  final bool canRememberForBiometric;
   final TimetableService timetableService;
 
   @override
@@ -237,7 +239,36 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleLogout() async {
-    await widget.onLogout();
+    var remember = false;
+    if (widget.canRememberForBiometric) {
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Wylogować?'),
+          content: const Text(
+            'Czy zapamiętać login i hasło, żeby następnym razem zalogować się odciskiem palca (lub PIN-em telefonu)? '
+            'Dane zostają tylko na tym telefonie, w bezpiecznym magazynie.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Anuluj'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Nie zapamiętuj'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Zapamiętaj'),
+            ),
+          ],
+        ),
+      );
+      if (choice == null) return;
+      remember = choice;
+    }
+    await widget.onLogout(remember);
   }
 
   /// Colors the update icon from cache immediately, then — at most once

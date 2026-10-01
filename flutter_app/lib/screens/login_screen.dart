@@ -24,7 +24,7 @@ class LoginScreen extends StatefulWidget {
   /// into the form (or null if auth failed/was cancelled). This never
   /// submits the login itself — it only saves the user from retyping the
   /// password by hand; they still confirm with the normal "Zaloguj" button.
-  final Future<({String username, String password})?> Function()? onBiometricFill;
+  final Future<({String username, String password, String role})?> Function()? onBiometricFill;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -62,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _usernameController.text = creds.username;
       _passwordController.text = creds.password;
+      _role = creds.role;
     });
   }
 

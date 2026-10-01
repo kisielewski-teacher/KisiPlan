@@ -3,33 +3,14 @@
 Zasady: dopisuję, gdy znajdę coś do zrobienia lub do zdecydowania; ogarnięte punkty po prostu usuwam.
 Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 
-## 🔴 Do zdecydowania (czeka na Ciebie)
-
-- [ ] **Licencja repozytorium** – repo publiczne, brak pliku LICENSE → formalnie „all rights reserved”.
-      Wybierz: MIT / GPL-3.0 / proprietary. (Przy GPL-3.0 deklarujesz kod jako otwarty; MIT = najprościej.)
-- [ ] **Logo szkoły `assets/Mechanik.png`** (i w instrukcji HTML) – znak/logo szkoły w publicznym repo i aplikacji.
-      Czy masz zgodę dyrekcji na użycie? Jeśli nie → usunąć/zastąpić.
-- [ ] **Regulamin Librusa / zgodność prawna** – aplikacja loguje się do Synergii nieoficjalnym API (scraping + `client_id`
-      mobilnej aplikacji Librusa). Disclaimer w stopce już jest. Czy chcesz dodatkowo: polityka prywatności
-      (hasło trzymane tylko lokalnie w secure storage, nic nie wysyłane do autora) w README/instrukcji?
-      Ewentualnie uprzedzić dyrekcję/administratora Librusa w szkole.
-- [ ] **Adres e-mail w kodzie i historii gita** – `oxykisiel@gmail.com` (kontakt, celowo) oraz służbowy
-      `marcin.kisielewski@zsmil.edu.pl` w autorze wszystkich 72 commitów w publicznym repo. Zmienić `git config user.email` na prywatny/noreply na przyszłość?
-
 ## 🟡 Do zrobienia (bezpieczne, mogę zrobić po Twoim „ok”)
 
 ### Porządek w repo
 
-- [ ] Usunąć śmieci z roota: `flutter_run_log.txt`, `run.log`, `run_emu.log` (logi z emulatora, mogą zawierać dane z Librusa),
-      `plan-mechanika-instrukcja-paczka.zip` (28 MB, zawiera APK – nie do repo; kopia jest w Releases).
 - [ ] Usunąć `.venv/` (stare środowisko Pythona, skrypt `fetch_plan.py` już nie istnieje) i pusty `.sixth/`.
 
 ### Dokumentacja
 
-- [ ] README: wymagania iOS 12 vs projekt iOS 13.0; metoda instalacji `app-debug.apk` vs wydania release z GitHuba – zaktualizować;
-      dodać link do Releases jako główną metodę instalacji + sekcję o automatycznych aktualizacjach.
-- [ ] README: dodać sekcję Licencja (po decyzji o licencji repozytorium).
-- [ ] `docs/JAK_WSTAWIC_NA_STRONE.txt` wspomina o dołączonym APK – w repo go nie ma; poprawić lub usunąć akapit.
 - [ ] `docs/plan-mechanika-instrukcja.html` (171 KB, zrzuty base64) – ładuje czcionki z Google Fonts (RODO – IP odwiedzających do Google). Rozważyć hostowanie czcionek lokalnie.
 
 ### Kod
@@ -52,10 +33,10 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 
 ### Zależności i licencje
 
-- [ ] `flutter pub upgrade` – 34 zależności do aktualizacji (12 wymaga zmiany ograniczeń w pubspec: `--major-versions`). Po aktualizacji pełny test.
+- [ ] Zależności z nowymi wersjami głównymi (wymagają zmiany ograniczeń w `pubspec.yaml` i testu na telefonie): `flutter_local_notifications` 21→22,
+      `flutter_secure_storage` 10→11 (**ryzyko**: sprawdzić, że zapisane hasło nadal się odczytuje po aktualizacji aplikacji), `home_widget` 0.9→0.10, `local_auth` 2→3.
+      Aktualizować pojedynczo, każdą z testem na telefonie (logowanie, powiadomienia, widżet, biometria).
 - [ ] Ostrzeżenie Fluttera: Kotlin Gradle Plugin → „Built-in Kotlin” (`android.builtInKotlin=false`); pluginy flutter_timezone, home_widget, workmanager, shared_preferences – czekać na ich aktualizacje.
-- [ ] Audyt licencji zależności (pubspec.lock): zebrać typy licencji (BSD/MIT/Apache) i potwierdzić brak GPL/AGPL
-      niezgodnych z wybraną licencją repo. Ekran „Licencje open source” w aplikacji już jest.
 - [ ] Czcionki/ikony: `assets/icona.png` – potwierdzić autorstwo/prawa do ikony.
 
 ## ⏳ Czeka na wspólną reinstalację u wszystkich użytkowników

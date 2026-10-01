@@ -7,14 +7,15 @@ Aplikacja na Androida wyświetlająca plan lekcji z Librus Synergia dla uczniów
 ## Spis treści
 
 1. [Wymagania](#wymagania)
-2. [Instalacja na Androidzie](#instalacja-na-androidzie)
+2. [Instalacja na Androidzie](#instalacja-na-androidzie) (w tym aktualizacje)
 3. [Pierwsze uruchomienie i logowanie](#pierwsze-uruchomienie-i-logowanie)
 4. [Instrukcja użytkowania](#instrukcja-użytkowania)
 5. [Powiadomienia](#powiadomienia)
 6. [Tryb offline](#tryb-offline)
 7. [Rozwiązywanie problemów](#rozwiązywanie-problemów)
 8. [Prywatność i zastrzeżenia](#prywatność-i-zastrzeżenia)
-9. [Dla programisty](#dla-programisty)
+9. [Licencja](#licencja)
+10. [Dla programisty](#dla-programisty)
 
 ---
 
@@ -24,7 +25,7 @@ Aplikacja na Androida wyświetlająca plan lekcji z Librus Synergia dla uczniów
 
 | Platforma | Minimalna wersja                |
 |-----------|---------------------------------|
-| Android   | Android 6.0 (API 23) lub nowszy |
+| Android   | Android 7.0 (API 24) lub nowszy |
 
 ### Wymagania do działania
 
@@ -36,36 +37,27 @@ Aplikacja na Androida wyświetlająca plan lekcji z Librus Synergia dla uczniów
 
 ## Instalacja na Androidzie
 
-### Metoda 1 – Instalacja z pliku APK (zalecana)
+### Metoda 1 – Pobranie APK z GitHuba (zalecana)
 
-1. **Pobierz plik APK** na telefon (np. przez e-mail, pendrive lub bezpośrednio).
+1. Na telefonie otwórz stronę wydań: [github.com/kisielewski-teacher/KisiPlan/releases/latest](https://github.com/kisielewski-teacher/KisiPlan/releases/latest) i pobierz plik **PlanMechanika.apk**.
 
 2. **Zezwól na instalację z nieznanych źródeł:**
-   - Na Androidzie 8.0 i nowszym: otwórz *Ustawienia → Aplikacje → Specjalny dostęp do aplikacji → Instalowanie nieznanych aplikacji*, wybierz aplikację (np. Menedżer plików lub przeglądarkę), włącz przełącznik.
-   - Na Androidzie 7.x i starszym: otwórz *Ustawienia → Zabezpieczenia*, włącz opcję **Nieznane źródła**.
+   - Ustawienia → Aplikacje → Specjalny dostęp do aplikacji → *Instalowanie nieznanych aplikacji*, wybierz przeglądarkę lub menedżer plików, z którego instalujesz, i włącz przełącznik.
 
-3. **Otwórz pobrany plik APK** za pomocą menedżera plików.
+3. **Otwórz pobrany plik APK**, naciśnij **Instaluj**, a po instalacji **Otwórz**.
 
-4. Naciśnij **Instaluj** i poczekaj na zakończenie.
+### Aktualizacje
 
-5. Po instalacji naciśnij **Otwórz**.
-
-> **Uwaga:** Przy każdej aktualizacji aplikacji wystarczy zainstalować nowy plik APK — poprzednie dane (dane logowania) zostaną zachowane.
+Aplikacja sama sprawdza (co kilka dni) wydania na GitHubie. Gdy jest nowa wersja, ikona aktualizacji na górze ekranu zmienia kolor z zielonego (aplikacja jest aktualna) na czerwony (jest nowa wersja) — naciśnij ją, aby pobrać i zainstalować nową wersję. Przy pierwszej aktualizacji Android poprosi o zgodę na instalowanie aplikacji z tego źródła. Możesz też ręcznie pobrać nowy plik APK z wydań (Metoda 1) — zainstaluje się na wierzch, a dane logowania zostaną zachowane.
 
 ### Metoda 2 – Instalacja przez kabel USB (dla zaawansowanych)
 
 1. Podłącz telefon do komputera kablem USB.
 2. Na telefonie włącz **Opcje programisty** i **Debugowanie USB** (Ustawienia → Informacje o telefonie → kliknij 7 razy numer kompilacji).
-3. W terminalu na komputerze uruchom:
+3. Pobierz plik APK z wydań i w terminalu na komputerze uruchom:
 
    ```powershell
-   flutter install
-   ```
-
-   lub
-
-   ```powershell
-   adb install build\app\outputs\flutter-apk\app-debug.apk
+   adb install -r PlanMechanika.apk
    ```
 
 ---
@@ -214,6 +206,12 @@ Oznacza to, że:
 - Aplikacja łączy się tylko z serwerami Librusa oraz z GitHubem (sprawdzanie aktualizacji).
 - Zgłoszenie błędu lub pomysłu (przycisk w aplikacji) wysyłasz sam. Możesz do niego dołączyć zrzut ekranu planu z dnia, a decyzja należy do Ciebie.
 - Wylogowanie usuwa zapisane dane logowania z telefonu.
+
+---
+
+## Licencja
+
+Kod źródłowy jest udostępniony na licencji [MIT](LICENSE). Logo szkoły (`flutter_app/assets/Mechanik.png`) jest użyte za zgodą dyrekcji i nie jest objęte tą licencją.
 
 ---
 

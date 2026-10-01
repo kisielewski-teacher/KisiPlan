@@ -1,11 +1,9 @@
 PLAN MECHANIKA — INSTRUKCJA DO WSTAWIENIA NA mechanik.slupsk.pl
 ==================================================================
 
-W tej paczce są dwa pliki:
+W tej paczce jest jeden plik:
 
     plan-mechanika-instrukcja.html   — gotowa strona z instrukcją
-    PlanMechanika.apk                 — kopia aplikacji (do testów lokalnych,
-                                         nie trzeba jej nigdzie wgrywać — patrz niżej)
 
 Strona ma bezpieczny "namiot" (#pm-manual) wokół całej treści, więc jej
 style nie powinny wpłynąć na resztę strony WordPress. Wszystkie obrazki
@@ -27,11 +25,6 @@ wydanie, link się nie zmienia i nic na stronie nie trzeba podmieniać.
 Kliknięcie przycisku na stronie po prostu od razu pobiera plik .apk —
 dla odwiedzającego wygląda i działa dokładnie tak samo, jakby plik leżał
 na Waszym serwerze.
-
-Załączony w tej paczce plik PlanMechanika.apk to tylko kopia zapasowa /
-do lokalnych testów instalacji — nie musisz go nigdzie wgrywać, żeby
-strona działała.
-
 
 NAJPROSTSZY SPOSÓB WSTAWIENIA STRONY — Divi Builder, moduł "Kod"
 ---------------------------------------------------------------------

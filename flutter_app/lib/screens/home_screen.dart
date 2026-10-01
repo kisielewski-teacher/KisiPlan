@@ -16,7 +16,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Adres, na który trafiają pomysły użytkowników zgłoszone z aplikacji.
-const _feedbackEmail = 'oxykisiel@gmail.com';
+const _feedbackEmail = 'marcin.kisielewski@zsmil.edu.pl';
 
 // Gap między lekcjami dłuższy niż typowy dzwonek liczy się jako "okienko"
 // (wolny czas), a nie zwykła "przerwa".

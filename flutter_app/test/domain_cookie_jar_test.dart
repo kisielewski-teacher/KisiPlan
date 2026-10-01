@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kisiplan/services/timetable_service.dart';
+import 'package:plan_mechanika/services/timetable_service.dart';
 
 /// Simulates the multi-domain Librus login handshake:
 /// api.librus.pl issues a DZIENNIKSID, then synergia.librus.pl issues its

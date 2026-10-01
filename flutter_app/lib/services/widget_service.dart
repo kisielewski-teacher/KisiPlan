@@ -1,5 +1,5 @@
 import 'package:home_widget/home_widget.dart';
-import 'package:kisiplan/models/lesson.dart';
+import 'package:plan_mechanika/models/lesson.dart';
 
 /// Pushes the current/next lesson to the Android home screen widget.
 class WidgetService {

@@ -1,4 +1,4 @@
-import 'package:kisiplan/models/lesson.dart';
+import 'package:plan_mechanika/models/lesson.dart';
 
 class LoadResult {
   final List<Lesson> lessons;

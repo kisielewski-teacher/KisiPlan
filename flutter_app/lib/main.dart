@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:workmanager/workmanager.dart';
-import 'package:kisiplan/screens/login_screen.dart';
-import 'package:kisiplan/screens/home_screen.dart';
-import 'package:kisiplan/services/background_sync_service.dart';
-import 'package:kisiplan/services/biometric_auth_service.dart';
-import 'package:kisiplan/services/notification_service.dart';
-import 'package:kisiplan/services/timetable_service.dart';
+import 'package:plan_mechanika/screens/login_screen.dart';
+import 'package:plan_mechanika/screens/home_screen.dart';
+import 'package:plan_mechanika/services/background_sync_service.dart';
+import 'package:plan_mechanika/services/biometric_auth_service.dart';
+import 'package:plan_mechanika/services/notification_service.dart';
+import 'package:plan_mechanika/services/timetable_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +20,7 @@ void main() async {
 
   await NotificationService().init();
   await _registerBackgroundSync();
-  runApp(const SzkolplanApp());
+  runApp(const PlanMechanikaApp());
 }
 
 /// Periodically re-fetches the timetable in the background so the user gets
@@ -49,14 +49,14 @@ Future<void> _registerBackgroundSync() async {
   }
 }
 
-class SzkolplanApp extends StatefulWidget {
-  const SzkolplanApp({super.key});
+class PlanMechanikaApp extends StatefulWidget {
+  const PlanMechanikaApp({super.key});
 
   @override
-  State<SzkolplanApp> createState() => _SzkolplanAppState();
+  State<PlanMechanikaApp> createState() => _PlanMechanikaAppState();
 }
 
-class _SzkolplanAppState extends State<SzkolplanApp> {
+class _PlanMechanikaAppState extends State<PlanMechanikaApp> {
   final TimetableService _service = TimetableService();
   final BiometricAuthService _biometricAuth = BiometricAuthService();
   bool _loading = true;

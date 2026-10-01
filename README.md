@@ -1,6 +1,6 @@
-# Szkołplan
+# Plan Mechanika
 
-Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i nauczycieli szkół. Pokazuje aktualną lekcję, odlicza czas do końca, wyświetla przerwy i dyżury nauczyciela, wysyła powiadomienia o ważnych momentach dnia.
+Aplikacja na Androida wyświetlająca plan lekcji z Librus Synergia dla uczniów i nauczycieli szkół. Pokazuje aktualną lekcję, odlicza czas do końca, wyświetla przerwy i dyżury nauczyciela, wysyła powiadomienia o ważnych momentach dnia.
 
 ---
 
@@ -8,12 +8,12 @@ Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i n
 
 1. [Wymagania](#wymagania)
 2. [Instalacja na Androidzie](#instalacja-na-androidzie)
-3. [Instalacja na iPhonie](#instalacja-na-iphonie)
-4. [Pierwsze uruchomienie i logowanie](#pierwsze-uruchomienie-i-logowanie)
-5. [Instrukcja użytkowania](#instrukcja-użytkowania)
-6. [Powiadomienia](#powiadomienia)
-7. [Tryb offline](#tryb-offline)
-8. [Rozwiązywanie problemów](#rozwiązywanie-problemów)
+3. [Pierwsze uruchomienie i logowanie](#pierwsze-uruchomienie-i-logowanie)
+4. [Instrukcja użytkowania](#instrukcja-użytkowania)
+5. [Powiadomienia](#powiadomienia)
+6. [Tryb offline](#tryb-offline)
+7. [Rozwiązywanie problemów](#rozwiązywanie-problemów)
+8. [Prywatność i zastrzeżenia](#prywatność-i-zastrzeżenia)
 9. [Dla programisty](#dla-programisty)
 
 ---
@@ -25,7 +25,6 @@ Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i n
 | Platforma | Minimalna wersja                |
 |-----------|---------------------------------|
 | Android   | Android 6.0 (API 23) lub nowszy |
-| iOS       | iOS 12.0 lub nowszy             |
 
 ### Wymagania do działania
 
@@ -68,37 +67,6 @@ Aplikacja mobilna wyświetlająca plan lekcji z Librus Synergia dla uczniów i n
    ```powershell
    adb install build\app\outputs\flutter-apk\app-debug.apk
    ```
-
----
-
-## Instalacja na iPhonie
-
-Instalacja na iOS wymaga jednej z poniższych metod, ponieważ Apple nie pozwala instalować aplikacji spoza App Store bez podpisania kodu.
-
-### Metoda 1 – TestFlight (najłatwiejsza, wymaga zaproszenia)
-
-1. Zainstaluj aplikację **TestFlight** z App Store.
-2. Otwórz link z zaproszeniem od dewelopera.
-3. Zainstaluj aplikację przez TestFlight.
-
-### Metoda 2 – AltStore (bez konta dewelopera)
-
-1. Na komputerze (Windows lub Mac) zainstaluj **AltServer** ze strony [altstore.io](https://altstore.io).
-2. Podłącz iPhone kablem USB do komputera.
-3. W AltServer kliknij *Install AltStore* i wybierz swój iPhone.
-4. Na telefonie w *Ustawienia → Ogólne → Zarządzanie urządzeniem* zaufaj certyfikatowi dewelopera.
-5. Otwórz AltStore na telefonie, przejdź do zakładki **My Apps**, naciśnij **+** i wybierz plik `.ipa` aplikacji.
-
-> **Uwaga:** AltStore wymaga co 7 dni odświeżenia certyfikatu (lub 1 rok przy płatnym koncie Apple Developer).
-
-### Metoda 3 – Xcode (wymaga komputera Mac i konta Apple)
-
-1. Na Macu zainstaluj Xcode z App Store.
-2. Otwórz projekt w folderze `flutter_app/ios/` w Xcode.
-3. Podłącz iPhone kablem, wybierz go jako urządzenie docelowe.
-4. W ustawieniach projektu skonfiguruj swoje Apple ID jako *Team*.
-5. Kliknij **Run** (▶) — Xcode zbuduje i zainstaluje aplikację.
-6. Na iPhonie w *Ustawienia → Ogólne → Zarządzanie urządzeniem* zaufaj certyfikatowi.
 
 ---
 
@@ -192,7 +160,7 @@ Aplikacja może wysyłać powiadomienia o ważnych momentach dnia:
 
 Na Androidzie: przy pierwszym uruchomieniu pojawi się prośba o zgodę — naciśnij *Zezwól*.
 
-Na iPhonie: przy pierwszym uruchomieniu pojawi się prośba o zgodę — naciśnij *Zezwól*. Jeśli odmówiłeś, wejdź w *Ustawienia → Szkołplan → Powiadomienia* i włącz je ręcznie.
+Przy pierwszym uruchomieniu pojawi się prośba o zgodę — naciśnij *Zezwól*. Jeśli odmówiłeś, włącz powiadomienia w ustawieniach systemu.
 
 ---
 
@@ -225,8 +193,7 @@ Oznacza to, że:
 
 ### Aplikacja nie wysyła powiadomień
 
-- Android: Ustawienia → Aplikacje → Szkołplan → Powiadomienia → włącz
-- iPhone: Ustawienia → Szkołplan → Powiadomienia → włącz
+- Android: Ustawienia → Aplikacje → Plan Mechanika → Powiadomienia → włącz
 
 ### Godziny lekcji są błędne
 
@@ -234,10 +201,19 @@ Oznacza to, że:
 - Jeśli szkoła zmieniła godziny lekcji w systemie, odśwież plan
 - Przy braku dostępu do API godzin aplikacja używa domyślnego planu szkoły
 
-### Na iPhonie aplikacja przestała działać po 7 dniach
+---
 
-- Dotyczy instalacji przez AltStore z bezpłatnym kontem Apple
-- Otwórz AltStore na telefonie (połączonym z komputerem z AltServerem) i odśwież certyfikat
+## Prywatność i zastrzeżenia
+
+**Nieoficjalna aplikacja.** Plan Mechanika jest nieoficjalną, bezpłatną aplikacją, niezwiązaną z firmą Librus ani z żadną szkołą. „Librus” i „Synergia” są znakami należącymi do ich właścicieli. Aplikacja loguje się do Librus Synergia nieoficjalnie, więc zmiany po stronie Librusa mogą ją zepsuć. Używasz jej na własną odpowiedzialność.
+
+**Prywatność.**
+
+- Login i hasło są zapisane wyłącznie na Twoim telefonie, w bezpiecznym magazynie systemu (Android Keystore). Służą tylko do logowania do Librusa.
+- Plan lekcji (tryb offline) jest zapisany lokalnie na telefonie. Autor aplikacji nie ma serwera i nie zbiera żadnych danych.
+- Aplikacja łączy się tylko z serwerami Librusa oraz z GitHubem (sprawdzanie aktualizacji).
+- Zgłoszenie błędu lub pomysłu (przycisk w aplikacji) wysyłasz sam. Możesz do niego dołączyć zrzut ekranu planu z dnia, a decyzja należy do Ciebie.
+- Wylogowanie usuwa zapisane dane logowania z telefonu.
 
 ---
 
@@ -249,7 +225,6 @@ Sekcja dla osoby rozwijającej projekt.
 
 - Flutter SDK 3.x
 - Android Studio lub VS Code z wtyczką Flutter
-- Dla iOS: komputer Mac z Xcode 14+
 
 ### Szybki start
 
@@ -271,18 +246,6 @@ Gotowy plik APK znajduje się w:
 lub
 `build\app\outputs\flutter-apk\app-release.apk`
 
-### Budowanie IPA (iOS) – wymaga Maca
-
-```bash
-flutter build ipa
-```
-
-### Budowanie na Windows
-
-```powershell
-flutter build windows
-```
-
 ### Struktura projektu
 
 ```text
@@ -299,19 +262,7 @@ flutter_app/lib/
     └── secure_storage_service.dart    # Zapis danych logowania
 ```
 
-### Skrypt testowy Python
-
-Skrypt `fetch_plan.py` służy do testowania pobierania danych z Librusa poza aplikacją.
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python fetch_plan.py
-```
-
 ### Ograniczenia techniczne
 
 - Aplikacja zależy od API Librus Synergia — zmiany po stronie Librusa mogą wymagać aktualizacji
-- Wersja webowa nie obsługuje pełnego logowania z powodu ograniczeń CORS
 - Dane offline nie zastępują aktualnego planu, pełnią rolę awaryjną

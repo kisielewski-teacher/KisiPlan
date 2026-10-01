@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
-import 'package:kisiplan/models/lesson.dart';
-import 'package:kisiplan/models/load_result.dart';
-import 'package:kisiplan/services/local_db_service.dart';
-import 'package:kisiplan/services/secure_storage_service.dart';
+import 'package:plan_mechanika/models/lesson.dart';
+import 'package:plan_mechanika/models/load_result.dart';
+import 'package:plan_mechanika/services/local_db_service.dart';
+import 'package:plan_mechanika/services/secure_storage_service.dart';
 
 /// Domain-aware cookie jar that keeps cookies scoped per domain,
 /// preventing api.librus.pl and synergia.librus.pl from overwriting

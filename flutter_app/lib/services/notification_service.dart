@@ -4,7 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:kisiplan/models/lesson.dart';
+import 'package:plan_mechanika/models/lesson.dart';
 
 class NotificationService {
   NotificationService._internal();

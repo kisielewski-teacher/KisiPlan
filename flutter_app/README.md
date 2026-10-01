@@ -1,6 +1,6 @@
-# Szkołplan – Flutter Mobile App
+# Plan Mechanika – Flutter Mobile App
 
-Aplikacja mobilna na Androida i iOS wyświetlająca plan lekcji z Librus Synergia dla uczniów i nauczycieli.
+Aplikacja mobilna na Androida wyświetlająca plan lekcji z Librus Synergia dla uczniów i nauczycieli.
 
 Pełna instrukcja obsługi, wymagania i instrukcja instalacji znajdują się w [głównym README](../README.md).
 
@@ -14,23 +14,16 @@ Pełna instrukcja obsługi, wymagania i instrukcja instalacji znajdują się w [
 - zastępstwa wyróżnione osobnym kolorem
 - powiadomienia o początku dnia, końcu przerwy, początku dyżuru i końcu zajęć
 - tryb offline – ostatnio pobrany plan zapisywany lokalnie
+- widżet ekranu głównego, odblokowanie biometryczne, synchronizacja w tle
+- automatyczne sprawdzanie aktualizacji (GitHub Releases)
 - stopka z autorem aplikacji
 
 ## Struktura projektu
 
-```text
-lib/
-├── main.dart                          # Punkt wejścia aplikacji
-├── models/
-│   └── lesson.dart                    # Model lekcji + logika czasu
-├── services/
-│   ├── timetable_service.dart         # Logowanie i pobieranie planu z Librusa
-│   ├── notification_service.dart      # Logika powiadomień
-│   └── secure_storage_service.dart    # Bezpieczny zapis danych logowania
-└── screens/
-    ├── login_screen.dart              # Ekran logowania
-    └── home_screen.dart               # Ekran główny
-```
+- `lib/models/` – model lekcji i logika czasu
+- `lib/screens/` – ekran logowania i ekran główny
+- `lib/services/` – logowanie i pobieranie planu z Librusa, powiadomienia, zapis lokalny (baza, bezpieczny magazyn), synchronizacja w tle, widget, biometria, aktualizacje z GitHuba
+- `test/` – testy jednostkowe (`flutter test`)
 
 ## Bezpieczeństwo
 

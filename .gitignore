@@ -1,0 +1,8 @@
+# Logi i paczki lokalne
+*.log
+*.zip
+
+# Środowiska i narzędzia lokalne
+.venv/
+.sixth/
+.claude/settings.local.json

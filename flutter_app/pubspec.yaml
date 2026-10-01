@@ -1,7 +1,7 @@
-name: kisiplan
+name: plan_mechanika
 description: Aplikacja planu lekcji dla uczniów i nauczycieli
 publish_to: 'none'
-version: 1.4.33+42
+version: 1.4.34+43
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -18,7 +18,6 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
   flutter_timezone: ^5.0.1
-  intl: ^0.20.2
   html: ^0.15.4
   url_launcher: ^6.3.2
   package_info_plus: ^10.2.1
@@ -36,10 +35,9 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: true
+  ios: false
   image_path: assets/icona.png
   min_sdk_android: 21
-  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

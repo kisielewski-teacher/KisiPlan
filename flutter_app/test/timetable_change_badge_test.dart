@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:html/parser.dart' as html_parser;
-import 'package:kisiplan/services/timetable_service.dart';
+import 'package:plan_mechanika/services/timetable_service.dart';
 
 // Regression test for a mismatch between the dziennik (Librus) and the app:
 // a lesson tagged "przesunięcie" in Librus (the teacher's own lesson shifted

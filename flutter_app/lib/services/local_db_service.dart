@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:kisiplan/models/lesson.dart';
+import 'package:plan_mechanika/models/lesson.dart';
 
 class LocalDbService {
   static const _dbName = 'szkolplan.db';

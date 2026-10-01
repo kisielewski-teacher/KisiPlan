@@ -5,11 +5,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:kisiplan/models/lesson.dart';
-import 'package:kisiplan/services/notification_service.dart';
-import 'package:kisiplan/services/timetable_service.dart';
-import 'package:kisiplan/services/update_service.dart';
-import 'package:kisiplan/services/widget_service.dart';
+import 'package:plan_mechanika/models/lesson.dart';
+import 'package:plan_mechanika/services/notification_service.dart';
+import 'package:plan_mechanika/services/timetable_service.dart';
+import 'package:plan_mechanika/services/update_service.dart';
+import 'package:plan_mechanika/services/widget_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';

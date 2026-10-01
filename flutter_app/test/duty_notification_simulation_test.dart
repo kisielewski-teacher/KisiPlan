@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kisiplan/models/lesson.dart';
+import 'package:plan_mechanika/models/lesson.dart';
 
 // ---------------------------------------------------------------------------
 // This file simulates the decision algorithm inside

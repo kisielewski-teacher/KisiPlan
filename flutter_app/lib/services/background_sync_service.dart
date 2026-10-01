@@ -1,9 +1,9 @@
 import 'package:workmanager/workmanager.dart';
-import 'package:kisiplan/models/lesson.dart';
-import 'package:kisiplan/services/local_db_service.dart';
-import 'package:kisiplan/services/notification_service.dart';
-import 'package:kisiplan/services/timetable_service.dart';
-import 'package:kisiplan/services/widget_service.dart';
+import 'package:plan_mechanika/models/lesson.dart';
+import 'package:plan_mechanika/services/local_db_service.dart';
+import 'package:plan_mechanika/services/notification_service.dart';
+import 'package:plan_mechanika/services/timetable_service.dart';
+import 'package:plan_mechanika/services/widget_service.dart';
 
 const backgroundSyncTaskName = 'timetableBackgroundSync';
 

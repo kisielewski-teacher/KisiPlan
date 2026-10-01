@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kisiplan/models/lesson.dart';
-import 'package:kisiplan/services/widget_service.dart';
+import 'package:plan_mechanika/models/lesson.dart';
+import 'package:plan_mechanika/services/widget_service.dart';
 
 Lesson _lesson(String start, String end, {String subject = 'Lekcja', bool isCancelled = false, bool isVacated = false}) {
   return Lesson.fromJson({

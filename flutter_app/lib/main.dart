@@ -7,9 +7,11 @@ import 'package:plan_mechanika/screens/home_screen.dart';
 import 'package:plan_mechanika/services/background_sync_service.dart';
 import 'package:plan_mechanika/services/biometric_auth_service.dart';
 import 'package:plan_mechanika/services/notification_service.dart';
+import 'package:plan_mechanika/services/release_logging.dart';
 import 'package:plan_mechanika/services/timetable_service.dart';
 
 void main() async {
+  silenceDebugLogsInRelease();
   WidgetsFlutterBinding.ensureInitialized();
 
   // sqflite requires FFI on desktop platforms

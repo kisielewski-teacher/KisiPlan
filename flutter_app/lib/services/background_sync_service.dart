@@ -2,6 +2,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:plan_mechanika/models/lesson.dart';
 import 'package:plan_mechanika/services/local_db_service.dart';
 import 'package:plan_mechanika/services/notification_service.dart';
+import 'package:plan_mechanika/services/release_logging.dart';
 import 'package:plan_mechanika/services/timetable_service.dart';
 import 'package:plan_mechanika/services/widget_service.dart';
 
@@ -11,6 +12,7 @@ const backgroundSyncTaskName = 'timetableBackgroundSync';
 /// from the running app (if any). Must stay a top-level/static function.
 @pragma('vm:entry-point')
 void backgroundSyncCallbackDispatcher() {
+  silenceDebugLogsInRelease();
   Workmanager().executeTask((task, inputData) async {
     if (task == backgroundSyncTaskName) {
       try {

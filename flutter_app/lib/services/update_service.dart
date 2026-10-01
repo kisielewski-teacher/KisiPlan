@@ -171,7 +171,16 @@ class UpdateService {
 
   /// Downloads [url] to the app's cache dir, reporting progress in [0, 1].
   Future<File> download(String url, void Function(double progress) onProgress) async {
-    final response = await http.Client().send(http.Request('GET', Uri.parse(url)));
+    final client = http.Client();
+    try {
+      return await _downloadWith(client, url, onProgress);
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<File> _downloadWith(http.Client client, String url, void Function(double progress) onProgress) async {
+    final response = await client.send(http.Request('GET', Uri.parse(url)));
     if (response.statusCode != 200) {
       throw Exception('Pobieranie nie powiodło się: HTTP ${response.statusCode}');
     }

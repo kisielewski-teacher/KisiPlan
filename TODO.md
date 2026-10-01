@@ -10,16 +10,9 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 - [ ] `timetable_service.dart` (3004 linie) – ogromny plik; wiele zagnieżdżonych prób logowania (SSO/portal/bearer/gateway),
       **uwaga**: wg pamięci projektu łańcuch SSO „wygląda na martwy, ale nie jest” (zależność od `oauth_token`) –
       NIE przycinać bez testu na żywo. Najpierw ustalić testami, co jest naprawdę nieużywane, dopiero potem czyścić.
-- [ ] ~190 wywołań `debugPrint`, część loguje fragmenty odpowiedzi serwera (do 1000 znaków body, 40 znaków tokenów).
-      W release `debugPrint` nadal trafia do logcat → ograniczyć do `kDebugMode` / usunąć logowanie tokenów i body.
 - [ ] `update_service.dart`: pobiera APK bez weryfikacji (tylko HTTPS z GitHuba; podpis sprawdza Android). Dodać
       sprawdzenie sumy SHA-256 z notatek wydania? (opcjonalnie, zależne od decyzji o kluczu)
-- [ ] `update_service.dart`: `http.Client()` w `download` nie jest zamykany (drobny wyciek).
 - [ ] Brak testów dla `update_service`, `login`, `secure_storage` (testowane są głównie model/powiadomienia/widget).
-- [ ] `android:allowBackup` nie ustawione w manifeście → domyślnie true; sprawdzić czy kopie zapasowe nie obejmują sekretów
-      (flutter_secure_storage ma własne reguły, ale warto jawnie ustawić `allowBackup="false"`).
-- [ ] `SCHEDULE_EXACT_ALARM` / `REQUEST_INSTALL_PACKAGES` – uprawnienia „wrażliwe”; potwierdzić, że oba są naprawdę potrzebne
-      (install – tak, dla auto-aktualizacji; exact alarm – do sprawdzenia).
 
 ### Zależności i licencje
 

@@ -1,7 +1,7 @@
 name: kisiplan
 description: Aplikacja planu lekcji dla uczniów i nauczycieli
 publish_to: 'none'
-version: 1.4.32+41
+version: 1.4.33+42
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

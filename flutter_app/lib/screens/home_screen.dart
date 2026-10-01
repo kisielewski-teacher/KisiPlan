@@ -368,7 +368,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (submission.screenshotBytes != null) {
       try {
         final tempDir = await getTemporaryDirectory();
-        final file = File('${tempDir.path}/plan_mechanika_zgloszenie.png');
+        final surname = submission.signature
+            .trim()
+            .replaceAll(RegExp(r'[\/:*?"<>|\s]+'), '_')
+            .replaceAll(RegExp(r'^_+|_+$'), '');
+        final file = File(
+          '${tempDir.path}/plan_mechanika_zgloszenie${surname.isEmpty ? '' : '_$surname'}.png',
+        );
         await file.writeAsBytes(submission.screenshotBytes!);
         await SharePlus.instance.share(
           ShareParams(
@@ -647,6 +653,9 @@ class _HomeScreenState extends State<HomeScreen> {
     // slot ("przesunięcie") — they look the same in the dziennik markup
     // (struck-through original + replacement) but mean different things.
     final isChange = lesson.isSubstitution || lesson.isMoved;
+    // A moved lesson is the real, valid lesson in its new slot (the old slot
+    // is a separate vacated entry), so only substitutions get struck through.
+    final strikeChange = lesson.isSubstitution && !lesson.isMoved;
     final changeLabel = lesson.isMoved ? 'Przesunięcie' : 'Zastępstwo';
     final changeColor = lesson.isMoved ? Colors.blue : Colors.green;
     final changeIcon = lesson.isMoved ? Icons.schedule : Icons.swap_horiz;
@@ -685,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        decoration: isChange ? TextDecoration.lineThrough : null,
+                        decoration: strikeChange ? TextDecoration.lineThrough : null,
                         fontSize: compact ? 13 : 14,
                       ),
                     ),
@@ -838,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        decoration: TextDecoration.lineThrough,
+                        decoration: strikeChange ? TextDecoration.lineThrough : null,
                         fontSize: compact ? 13 : 14,
                       ),
                     ),
@@ -873,7 +882,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (lesson.substituteTeacher?.isNotEmpty ?? false) 'zast. ${lesson.substituteTeacher}',
                     ].join(' · '),
                     style: TextStyle(
-                      decoration: isChange ? TextDecoration.lineThrough : null,
+                      decoration: strikeChange ? TextDecoration.lineThrough : null,
                       fontSize: compact ? 10 : 12,
                       color: Colors.grey,
                     ),
@@ -1349,9 +1358,15 @@ class _IdeaDialogState extends State<_IdeaDialog> {
     super.dispose();
   }
 
+  bool _showSignatureError = false;
+
   void _submit() {
     final description = _descriptionController.text.trim();
     if (description.isEmpty) return;
+    if (_signatureController.text.trim().isEmpty) {
+      setState(() => _showSignatureError = true);
+      return;
+    }
     Navigator.of(context).pop(
       _IdeaSubmission(
         signature: _signatureController.text.trim(),
@@ -1383,8 +1398,12 @@ class _IdeaDialogState extends State<_IdeaDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _signatureController,
-              decoration: const InputDecoration(
-                labelText: 'Podpis (nazwisko)',
+              onChanged: (_) {
+                if (_showSignatureError) setState(() => _showSignatureError = false);
+              },
+              decoration: InputDecoration(
+                labelText: 'Podpis (nazwisko) *',
+                errorText: _showSignatureError ? 'Podpis jest wymagany' : null,
                 hintText: 'Wpisz swoje nazwisko, żebym wiedział, czyj plan sprawdzić',
                 border: OutlineInputBorder(),
               ),

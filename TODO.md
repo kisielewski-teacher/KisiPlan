@@ -5,18 +5,8 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 
 ## 🟡 Do zrobienia (bezpieczne, mogę zrobić po Twoim „ok”)
 
-### Porządek w repo
-
-- [ ] Usunąć `.venv/` (stare środowisko Pythona, skrypt `fetch_plan.py` już nie istnieje) i pusty `.sixth/`.
-
-### Dokumentacja
-
-- [ ] `docs/plan-mechanika-instrukcja.html` (171 KB, zrzuty base64) – ładuje czcionki z Google Fonts (RODO – IP odwiedzających do Google). Rozważyć hostowanie czcionek lokalnie.
-
 ### Kod
 
-- [ ] `web/index.html`, `web/manifest.json`: „A new Flutter project.”, nazwa `szkolplan` → poprawić lub usunąć web.
-- [ ] `build.gradle.kts`: komentarze `TODO: Specify your own unique Application ID` (powiązane z decyzją wyżej).
 - [ ] `timetable_service.dart` (3004 linie) – ogromny plik; wiele zagnieżdżonych prób logowania (SSO/portal/bearer/gateway),
       **uwaga**: wg pamięci projektu łańcuch SSO „wygląda na martwy, ale nie jest” (zależność od `oauth_token`) –
       NIE przycinać bez testu na żywo. Najpierw ustalić testami, co jest naprawdę nieużywane, dopiero potem czyścić.
@@ -39,17 +29,16 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 - [ ] Ostrzeżenie Fluttera: Kotlin Gradle Plugin → „Built-in Kotlin” (`android.builtInKotlin=false`); pluginy flutter_timezone, home_widget, workmanager, shared_preferences – czekać na ich aktualizacje.
 - [ ] Czcionki/ikony: `assets/icona.png` – potwierdzić autorstwo/prawa do ikony.
 
-## ⏳ Czeka na wspólną reinstalację u wszystkich użytkowników
+## 🔐 Wymiana klucza podpisu bez reinstalacji
 
-Zrobić **razem, w jednym wydaniu**, gdy zdecydujesz, że można poprosić wszystkich o odinstalowanie starej aplikacji
-(zmiana identyfikatora lub podpisu = Android traktuje to jako inną aplikację → utrata danych i brak auto-aktualizacji).
-Do tego czasu NIE ruszać.
+Decyzja: identyfikator aplikacji `com.example.kisiplan` **zostaje** (aplikacji nie ma w Sklepie Play, zmiana wymagałaby reinstalacji
+i ręcznego przenoszenia loginu/hasła). Problem to tylko klucz podpisu `shared-debug.keystore.jks` (hasło „android” w repo).
+Android 9+ pozwala go wymienić bez reinstalacji dzięki rotacji klucza (`apksigner rotate` → łańcuch podpisów, plik lineage).
 
-- [ ] **Identyfikator aplikacji** `com.example.kisiplan` → własny, np. `pl.slupsk.mechanik.planmechanika`
-      (`build.gradle.kts`: `namespace` i `applicationId`; katalog i `package` w `MainActivity.kt` i `TimetableWidgetProvider.kt`;
-      kanał `com.example.kisiplan/installer` w `MainActivity.kt` i `update_service.dart`; komentarz TODO w `build.gradle.kts`).
-- [ ] **Prawdziwy klucz podpisu wydań** zamiast `shared-debug.keystore.jks` (hasło „android” w repo): nowy keystore w GitHub Secrets,
-      zmiana `signingConfigs` i joba `release` w `.github/workflows/build.yml`; usunąć debugowy keystore z repo i wyjątek z `flutter_app/.gitignore`.
-- [ ] **Nazwa bazy** `szkolplan.db` → `plan_mechanika.db` (`local_db_service.dart`) – przy reinstalacji i tak zaczyna się od zera, więc bez migracji.
-- [ ] **Nazwa repozytorium** `KisiPlan` → `PlanMechanika` (GitHub robi przekierowania, ale poprawić `update_service.dart`, instrukcję HTML i `docs/*`).
-- [ ] Po wydaniu: zapowiedź dla użytkowników (zrzut/instrukcja „odinstaluj starą, zainstaluj nową”) i sprawdzenie na telefonie, że aktualizator nie oferuje starego pakietu.
+- [ ] Wygenerować nowy keystore release (lokalnie, kopia zapasowa poza repo!) i plik lineage: stary klucz → nowy (`apksigner rotate`).
+- [ ] Wydanie podpisać nowym kluczem z lineage (v3), zachowując zgodność ze starym podpisem dla Androida 7–8 (sprawdzić, czy te telefony przyjmą aktualizację;
+      jeśli nie – zdecydować, czy ktoś z nimi w ogóle jest).
+- [ ] Keystore i hasła w GitHub Secrets; zmiana `signingConfigs` i joba `release` w `.github/workflows/build.yml`.
+- [ ] **Test na jednym telefonie**: zainstalować obecną wersję (stary podpis) → zaktualizować przez aplikację do wersji z nowym kluczem → login i dane zostają.
+- [ ] Dopiero po udanym teście: usunąć `shared-debug.keystore.jks` z repo i wyjątek z `flutter_app/.gitignore` (budowanie debug lokalnie przejdzie na zwykły debug.keystore).
+- [ ] Opcjonalnie, kosmetyka bez reinstalacji: nazwa repozytorium `KisiPlan` → `PlanMechanika` (GitHub przekierowuje; poprawić `update_service.dart`, instrukcję HTML i `docs/*`).

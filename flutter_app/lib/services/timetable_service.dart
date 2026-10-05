@@ -2395,7 +2395,8 @@ class TimetableService {
       final hasStrike = cell.querySelector('s') != null;
       final looksLikeChange = cellLower.contains('przesunięcie') ||
           cellLower.contains('zastępstwo') ||
-          cellLower.contains('zastepstwo');
+          cellLower.contains('zastepstwo') ||
+          cellLower.contains('nieobecn');
       final isStruckThrough = !isDuty && (hasStrike || looksLikeChange);
 
       String subject;
@@ -2445,7 +2446,7 @@ class TimetableService {
 
           final newText = textDivs[1].text.trim();
 
-          if (isOkienkoPlaceholder(newText)) {
+          if (isOkienkoPlaceholder(newText) || classification.isCancelled) {
             // The second div isn't a real replacement lesson \u2014 Librus is
             // just spelling out that the original slot is now free time.
             // Show the original (struck through) lesson with the "Okienko"
@@ -2638,6 +2639,12 @@ class TimetableService {
     String badgeText, {
     required bool hasReplacementLesson,
   }) {
+    // "nieobecność klasy/nauczyciela" is a newer Librus setting that is
+    // not struck through in the markup but means the slot is free, exactly
+    // like an "Okienko" — treat it as a plain cancellation.
+    if (badgeText.toLowerCase().contains('nieobecn')) {
+      return (isSubstitution: false, isMoved: false, isCancelled: true);
+    }
     if (_looksLikeSubstitutionKeyword(badgeText)) {
       return (isSubstitution: true, isMoved: false, isCancelled: false);
     }

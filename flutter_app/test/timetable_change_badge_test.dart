@@ -57,6 +57,19 @@ void main() {
       expect(result.isSubstitution, isFalse);
       expect(result.isMoved, isFalse);
     });
+
+    test('"nieobecność klasy" badge is a cancellation, even with a replacement div', () {
+      for (final replacement in [true, false]) {
+        final result = TimetableService.classifyChangeBadge(
+          'nieobecność klasy 4cT5 T4',
+          hasReplacementLesson: replacement,
+        );
+
+        expect(result.isCancelled, isTrue);
+        expect(result.isSubstitution, isFalse);
+        expect(result.isMoved, isFalse);
+      }
+    });
   });
 
   group('TimetableService.isOkienkoPlaceholder', () {

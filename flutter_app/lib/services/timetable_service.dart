@@ -2317,6 +2317,9 @@ class TimetableService {
       timetable.forEach((_, lessons) => lessons.sort((a, b) => a.startMinutes.compareTo(b.startMinutes)));
   }
 
+  @visibleForTesting
+  Map<String, List<Lesson>> parseHtmlTimetableForTest(String htmlBody) => _parseHtmlTimetable(htmlBody);
+
   Map<String, List<Lesson>> _parseHtmlTimetable(String htmlBody) {
     final doc = html_parser.parse(htmlBody);
 
@@ -2466,18 +2469,20 @@ class TimetableService {
                   .querySelectorAll('div.center.plan-lekcji-info')
                   .map((e) => e.text)
                   .join(' ');
-              final replacement = classifyChangeBadge(
-                _looksLikeSubstitutionKeyword(replacementBadges) ? replacementBadges : '',
-                hasReplacementLesson: true,
-              );
+              // The badges also include the "nieobecność klasy" one that
+              // cancelled the original, so classifyChangeBadge can't be used
+              // here — the replacement is a substitution unless it is
+              // explicitly tagged as a move.
+              final replacementIsMoved =
+                  !_looksLikeSubstitutionKeyword(replacementBadges) && _looksLikeMoveKeyword(replacementBadges);
               replacementLesson = {
                 'start': timeFrom,
                 'end': timeTo,
                 'subject': textDivs[1].querySelector('b')?.text.trim() ?? newText,
                 'room': RegExp(r's\.[\s ]*([0-9a-zA-Z]+)').firstMatch(newText)?.group(1) ?? '',
                 'className': _extractClassName(newText),
-                'isSubstitution': replacement.isSubstitution,
-                'isMoved': replacement.isMoved,
+                'isSubstitution': !replacementIsMoved,
+                'isMoved': replacementIsMoved,
               };
             }
           } else {

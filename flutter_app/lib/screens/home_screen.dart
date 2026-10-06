@@ -851,7 +851,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        decoration: strikeChange ? TextDecoration.lineThrough : null,
                         fontSize: compact ? 13 : 14,
                       ),
                     ),
@@ -886,7 +885,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (lesson.substituteTeacher?.isNotEmpty ?? false) 'zast. ${lesson.substituteTeacher}',
                     ].join(' · '),
                     style: TextStyle(
-                      decoration: strikeChange ? TextDecoration.lineThrough : null,
                       fontSize: compact ? 10 : 12,
                       color: Colors.grey,
                     ),

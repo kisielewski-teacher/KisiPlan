@@ -2413,6 +2413,7 @@ class TimetableService {
       String? originalSubject;
       String? originalRoom;
       String? originalClassName;
+      Map<String, dynamic>? replacementLesson;
 
       if (isDuty) {
         // For duties: the cell text is the location (e.g. "PARTER").
@@ -2456,6 +2457,29 @@ class TimetableService {
             subject = origSubject.isNotEmpty ? origSubject : origText;
             room = origRoom;
             className = origClassName;
+
+            // "nieobecność klasy" cancels the original lesson, but the second
+            // div can still be a real lesson covering the slot (e.g. a
+            // "zastępstwo" for another class). Keep it instead of dropping it.
+            if (!isOkienkoPlaceholder(newText) && newText.isNotEmpty) {
+              final replacementBadges = cell
+                  .querySelectorAll('div.center.plan-lekcji-info')
+                  .map((e) => e.text)
+                  .join(' ');
+              final replacement = classifyChangeBadge(
+                _looksLikeSubstitutionKeyword(replacementBadges) ? replacementBadges : '',
+                hasReplacementLesson: true,
+              );
+              replacementLesson = {
+                'start': timeFrom,
+                'end': timeTo,
+                'subject': textDivs[1].querySelector('b')?.text.trim() ?? newText,
+                'room': RegExp(r's\.[\s ]*([0-9a-zA-Z]+)').firstMatch(newText)?.group(1) ?? '',
+                'className': _extractClassName(newText),
+                'isSubstitution': replacement.isSubstitution,
+                'isMoved': replacement.isMoved,
+              };
+            }
           } else {
             isSubstitution = classification.isSubstitution;
             isMoved = classification.isMoved;
@@ -2519,6 +2543,12 @@ class TimetableService {
         if (originalClassName != null && originalClassName.isNotEmpty)
           'originalClassName': originalClassName,
       }));
+
+      if (replacementLesson != null) {
+        final rKey = '$dayKey|$timeFrom|$timeTo|${replacementLesson['subject'].toString().toLowerCase()}|'
+            '${replacementLesson['room'].toString().toLowerCase()}|${replacementLesson['className'].toString().toLowerCase()}';
+        if (seen.add(rKey)) result[dayKey]!.add(Lesson.fromJson(replacementLesson));
+      }
     }
 
     // Some schools inject break duties later as separate <tr> rows with data-date/time

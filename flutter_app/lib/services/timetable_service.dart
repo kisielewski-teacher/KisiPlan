@@ -130,7 +130,19 @@ class TimetableService {
   /// note per failed step); shown in the warning together with the login one.
   final List<String> _fetchNotes = [];
   void _note(String s) {
-    if (_fetchNotes.length < 8) _fetchNotes.add(s);
+    if (_fetchNotes.length < 8 && !_fetchNotes.contains(s)) _fetchNotes.add(s);
+  }
+
+  /// Visible text of an HTML page (scripts/styles/tags stripped), around [around].
+  static String _pageText(String html, {String around = 'Brak dost', int len = 280}) {
+    final text = html
+        .replaceAll(RegExp(r'<(script|style)[^>]*>.*?</\1>', dotAll: true, caseSensitive: false), ' ')
+        .replaceAll(RegExp(r'<[^>]+>'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final i = text.indexOf(around);
+    final start = i < 0 ? 0 : (i - 40).clamp(0, text.length);
+    return text.substring(start, (start + len).clamp(0, text.length));
   }
 
   static String _shortBody(String body) {
@@ -1662,10 +1674,7 @@ class TimetableService {
       // Always attempt fresh login to avoid relying on stale cookies.
       final role = (await _secureStorage.readRole()) ?? 'teacher';
       final error = await login(creds.username!, creds.password!, role: role);
-      if (error == null) {
-        lastLoginDiagnostic = null;
-        return null; // Fresh login succeeded.
-      }
+      if (error == null) return null; // Fresh login succeeded.
 
       debugPrint('autoLoginIfPossible: fresh login failed: $error');
       lastLoginDiagnostic ??= error;
@@ -1832,6 +1841,7 @@ class TimetableService {
           final title = RegExp(r'<title>([^<]*)</title>', caseSensitive: false).firstMatch(body)?.group(1)?.trim();
           _note('plan HTML: ${body.length} B, brak data-date, brak dostępu=$hasBrakDost, '
               'formularz logowania=${body.contains('name="login"')}, tytuł="${title ?? '-'}"');
+          _note('treść: "${_pageText(body)}"');
         }
       } else {
         debugPrint('[FETCH] plan_lekcji returned null!');

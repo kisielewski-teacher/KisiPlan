@@ -16,6 +16,16 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
       sprawdzenie sumy SHA-256 z notatek wydania? (opcjonalnie, zależne od decyzji o kluczu)
 - [ ] Brak testów samego logowania do Librusa (`TimetableService.login`, łańcuch SSO) – wymaga makiety odpowiedzi serwera; testy na żywo robimy ręcznie.
 
+### Logowanie do Librusa – AWARIA od 2026-10-31/11-02 (do naprawy w pierwszej kolejności)
+
+- [ ] Po zmianie Librusa (nowy wygląd + zabezpieczenia) logowanie OAuth przechodzi, ale sesja Synergii jest „Brak dostępu” (plan HTML, `/gateway` → 401 „Request is denied”).
+      Ustalone na telefonie (nauczyciel, client_id 47): POST logowania zwraca `goTo=/OAuth/Authorization/2FA?client_id=47` (nowy krok 2FA), potem PerformLogin → Grant →
+      `synergia/loguj/portalSzkoly?code=…` → portal; ciasteczka SDZIENNIKSID/DZIENNIKSID są, ale **brak `oauth_token`**, wymiana kodu na portalu daje `invalid_client`.
+      Hipotezy do sprawdzenia: (1) wymagane zaufane urządzenie – zapamiętać `DeviceCookie` (371 zn.) między logowaniami i wysyłać go; (2) Librus pyta w przeglądarce o dodatkowe
+      potwierdzenie (kod/e-mail); (3) inna ścieżka SSO (portal → Synergia). Hipoteza o nagłówku `x-baner` (nowy skrypt strony logowania) – nie była przyczyną logowania.
+      Diagnostyka w aplikacji (v1.4.45) pokazuje kroki pod żółtym komunikatem; wyłączyć, gdy logowanie wróci.
+- [ ] Ryzyko ogólne: aplikacja korzysta z nieoficjalnych mechanizmów Librusa, więc każda zmiana zabezpieczeń je psuje – rozważyć kontakt z Librusem w sprawie oficjalnego dostępu.
+
 ### Zależności i licencje
 
 - [ ] Zależności z nowymi wersjami głównymi (wymagają zmiany ograniczeń w `pubspec.yaml` i testu na telefonie): `flutter_local_notifications` 21→22,

@@ -18,8 +18,8 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
 
 ### Logowanie do Librusa po zmianie z listopada 2026
 
-- [ ] Naprawione dla nauczyciela (start logowania od `synergia.librus.pl/loguj/portalSzkoly`, żeby był `state`/`oauth_state` i cookie `oauth_token`). **Uczeń**: start logowania zostawiony po staremu
-      (działa przez REST/gateway) – sprawdzić na koncie ucznia, czy po zmianie Librusa nadal działa; jeśli nie, zastosować ten sam start (`/loguj/portalRodzina`?).
+- [ ] **Sprawdzić na koncie ucznia** wersję 1.4.47: start logowania ucznia zmieniony na `synergia.librus.pl/loguj/portalRodzina` (daje `client_id=46` + `state`, jak u nauczyciela).
+      Nie przetestowane na żywo (brak danych konta ucznia). Jeśli nadal „Brak dostępu”/gateway 401 – zdjąć diagnostykę z żółtego komunikatu i porównać z przeglądarką (Playwright).
 - [ ] Wyłączyć lub ograniczyć diagnostykę w żółtym komunikacie „Sesja wygasła” (v1.4.43–45), gdy sytuacja się uspokoi – zostawić krótką wersję.
 - [ ] Ryzyko ogólne: aplikacja korzysta z nieoficjalnych mechanizmów Librusa, więc każda zmiana zabezpieczeń je psuje – rozważyć kontakt z Librusem w sprawie oficjalnego dostępu.
 - [ ] Skrypt do śledzenia logowania w przeglądarce (Playwright + Edge, bez zapisu haseł) dobrze działa do porównań z aplikacją – dodać do `testy/` na przyszłe awarie.

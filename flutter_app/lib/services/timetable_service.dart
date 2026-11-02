@@ -201,15 +201,15 @@ class TimetableService {
       final ioClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
 
       // Step 1: Initialize OAuth session (follow all redirects, collect cookies).
-      // Teachers: since the Nov-2026 Librus change Synergia only hands out a full
-      // session (oauth_token cookie, working plan_lekcji) when the OAuth flow was
-      // started by Synergia itself: /loguj/portalSzkoly sets the `oauth_state`
-      // cookie and redirects to the login page with a matching `state`. Starting
-      // at api.librus.pl directly (no state) ends in "Brak dostępu".
-      // Students keep the old start (their REST/gateway path works with it).
+      // Since the Nov-2026 Librus change Synergia only hands out a full session
+      // (oauth_token cookie; working plan_lekcji / gateway) when the OAuth flow was
+      // started by Synergia itself: /loguj/portalSzkoly (teachers, client_id=47) or
+      // /loguj/portalRodzina (students, client_id=46) set the `oauth_state` cookie
+      // and redirect to the login page with a matching `state`. Starting at
+      // api.librus.pl directly (no state) ends in "Brak dostępu" / gateway 401.
       final startUrl = role == 'teacher'
           ? '$_synergiaUrl/loguj/portalSzkoly'
-          : '$_apiUrl/OAuth/Authorization?client_id=$clientId&response_type=code&scope=mydata';
+          : '$_synergiaUrl/loguj/portalRodzina';
       await _ioGetWithRedirects(
         ioClient,
         startUrl,

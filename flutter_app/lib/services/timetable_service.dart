@@ -119,6 +119,20 @@ class TimetableService {
   static const String _clientIdStudent = '46';
   static const bool _diagnosticLogs = false;
 
+  /// Short, password-free description of how the last login attempt ended
+  /// (HTTP status + start of Librus' reply). Shown next to the "session
+  /// expired" warning so a changed Librus login can be diagnosed from a
+  /// screenshot.
+  String? lastLoginDiagnostic;
+  int? _lastPostStatus;
+
+  static String _shortBody(String body) {
+    final flat = body.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final cut = flat.length > 160 ? '${flat.substring(0, 160)}…' : flat;
+    // goTo links carry one-time codes; keep only the part before the query.
+    return cut.replaceAllMapped(RegExp(r'([?&](code|token|access_token)=)[^&"\s]+'), (m) => '${m[1]}***');
+  }
+
   final SecureStorageService _secureStorage = SecureStorageService();
   final LocalDbService _db = LocalDbService();
 
@@ -185,7 +199,15 @@ class TimetableService {
       );
       ioClient.close();
 
-      final data = json.decode(postBody) as Map<String, dynamic>;
+      lastLoginDiagnostic = 'logowanie HTTP $_lastPostStatus: ${_shortBody(postBody)}';
+      debugPrint('[LOGIN] $lastLoginDiagnostic');
+
+      final Map<String, dynamic> data;
+      try {
+        data = json.decode(postBody) as Map<String, dynamic>;
+      } on FormatException {
+        return 'Librus odpowiedział nieoczekiwanie ($lastLoginDiagnostic).';
+      }
 
       if (data['status'] == 'error') {
         final errors = data['errors'] as List?;
@@ -220,6 +242,8 @@ class TimetableService {
 
       if (!cookieJar.containsKey('DZIENNIKSID') &&
           !cookieJar.containsKey('SDZIENNIKSID')) {
+        lastLoginDiagnostic =
+            'brak sesji Synergia po goTo (status=${data['status']}, ciasteczka: ${cookieJar.keys.toList()})';
         return 'Logowanie nie powiodlo sie: brak sesji Synergia.';
       }
 
@@ -352,6 +376,7 @@ class TimetableService {
     }
     req.write(body);
     final res = await req.close();
+    _lastPostStatus = res.statusCode;
     _collectIoCookies(res, cookieJar);
     domainJar?.collectFromResponse(res, url);
 
@@ -1630,9 +1655,13 @@ class TimetableService {
       // Always attempt fresh login to avoid relying on stale cookies.
       final role = (await _secureStorage.readRole()) ?? 'teacher';
       final error = await login(creds.username!, creds.password!, role: role);
-      if (error == null) return null; // Fresh login succeeded.
+      if (error == null) {
+        lastLoginDiagnostic = null;
+        return null; // Fresh login succeeded.
+      }
 
       debugPrint('autoLoginIfPossible: fresh login failed: $error');
+      lastLoginDiagnostic ??= error;
       // Login failed (network issue, etc.) – fall back to existing cookies.
       if (savedCookies != null && savedCookies.isNotEmpty) {
         _sessionCookies = savedCookies;
@@ -1745,6 +1774,7 @@ class TimetableService {
         fromCache: true,
         warning: sessionActuallyExpired
             ? 'Sesja wygasła, nie udało się pobrać nowego planu. Pokazano ostatni zapisany.'
+                '\nDiagnostyka: ${lastLoginDiagnostic ?? 'logowanie przeszło, ale plan nie został pobrany'}'
             : 'Brak internetu lub problem z serwerem Librusa. Pokazano ostatni zapisany plan.',
       );
     }

@@ -126,6 +126,13 @@ class TimetableService {
   String? lastLoginDiagnostic;
   int? _lastPostStatus;
 
+  /// Where the plan download went wrong after a successful login (one short
+  /// note per failed step); shown in the warning together with the login one.
+  final List<String> _fetchNotes = [];
+  void _note(String s) {
+    if (_fetchNotes.length < 8) _fetchNotes.add(s);
+  }
+
   static String _shortBody(String body) {
     final flat = body.replaceAll(RegExp(r'\s+'), ' ').trim();
     final cut = flat.length > 160 ? '${flat.substring(0, 160)}…' : flat;
@@ -1708,6 +1715,7 @@ class TimetableService {
     // would be misleading.
     var sessionActuallyExpired = false;
     var relogAttempted = false;
+    _fetchNotes.clear();
 
     // Tries a fresh login at most once per call. Cookies being non-empty
     // doesn't mean the session is actually alive — Librus can reject a
@@ -1774,7 +1782,8 @@ class TimetableService {
         fromCache: true,
         warning: sessionActuallyExpired
             ? 'Sesja wygasła, nie udało się pobrać nowego planu. Pokazano ostatni zapisany.'
-                '\nDiagnostyka: ${lastLoginDiagnostic ?? 'logowanie przeszło, ale plan nie został pobrany'}'
+                '\nDiagnostyka: ${lastLoginDiagnostic ?? 'logowanie OK'}'
+                '${_fetchNotes.isEmpty ? '' : '\n${_fetchNotes.join('\n')}'}'
             : 'Brak internetu lub problem z serwerem Librusa. Pokazano ostatni zapisany plan.',
       );
     }
@@ -1819,8 +1828,14 @@ class TimetableService {
         final hasDataDate = body.contains('data-date');
         final hasBrakDost = body.contains('Brak dost');
         debugPrint('[FETCH] plan_lekcji: len=${body.length}, hasDataDate=$hasDataDate, hasBrakDost=$hasBrakDost');
+        if (!hasDataDate) {
+          final title = RegExp(r'<title>([^<]*)</title>', caseSensitive: false).firstMatch(body)?.group(1)?.trim();
+          _note('plan HTML: ${body.length} B, brak data-date, brak dostępu=$hasBrakDost, '
+              'formularz logowania=${body.contains('name="login"')}, tytuł="${title ?? '-'}"');
+        }
       } else {
         debugPrint('[FETCH] plan_lekcji returned null!');
+        _note('plan HTML: brak odpowiedzi (błąd sieci lub przekierowań)');
       }
 
       if (_diagnosticLogs && body != null) {
@@ -1994,6 +2009,7 @@ class TimetableService {
       debugPrint('[api] używam gateway z ciasteczkami sesji');
     } else {
       debugPrint('[api] brak Bearer tokenu i ciasteczek sesji');
+      _note('API: brak tokenu i ciasteczek');
       return null;
     }
 
@@ -2062,18 +2078,25 @@ class TimetableService {
       // Pobierz plan – gateway nie obsługuje WeekStart, zwraca bieżący tydzień
       final ttRes = await http.get(Uri.parse('$apiBase/Timetables'), headers: headers);
       debugPrint('[api] Timetables status=${ttRes.statusCode}, len=${ttRes.body.length}');
-      if (ttRes.statusCode != 200) return null;
+      if (ttRes.statusCode != 200) {
+        _note('API Timetables HTTP ${ttRes.statusCode} (${apiBase.contains('gateway') ? 'gateway' : 'api'}): ${_shortBody(ttRes.body)}');
+        return null;
+      }
 
       final ttData = json.decode(ttRes.body) as Map<String, dynamic>;
       // Gateway API nie zwraca pola Status (tylko bezpośredni REST API); ignoruj null
       final status = ttData['Status'] as String?;
       if (status != null && status != 'ok') {
         debugPrint('[api] Timetables Status: $status');
+        _note('API Timetables Status=$status');
         return null;
       }
 
       final timetableRaw = ttData['Timetable'] as Map<String, dynamic>?;
-      if (timetableRaw == null) return null;
+      if (timetableRaw == null) {
+        _note('API Timetables bez pola Timetable: ${_shortBody(ttRes.body)}');
+        return null;
+      }
 
       const dayKeys = {1: 'monday', 2: 'tuesday', 3: 'wednesday', 4: 'thursday', 5: 'friday'};
       final result = <String, List<Lesson>>{for (final d in dayKeys.values) d: []};

@@ -16,15 +16,13 @@ Stan na start: `flutter analyze` – 0 problemów, `flutter test` – 63/63 OK.
       sprawdzenie sumy SHA-256 z notatek wydania? (opcjonalnie, zależne od decyzji o kluczu)
 - [ ] Brak testów samego logowania do Librusa (`TimetableService.login`, łańcuch SSO) – wymaga makiety odpowiedzi serwera; testy na żywo robimy ręcznie.
 
-### Logowanie do Librusa – AWARIA od 2026-10-31/11-02 (do naprawy w pierwszej kolejności)
+### Logowanie do Librusa po zmianie z listopada 2026
 
-- [ ] Po zmianie Librusa (nowy wygląd + zabezpieczenia) logowanie OAuth przechodzi, ale sesja Synergii jest „Brak dostępu” (plan HTML, `/gateway` → 401 „Request is denied”).
-      Ustalone na telefonie (nauczyciel, client_id 47): POST logowania zwraca `goTo=/OAuth/Authorization/2FA?client_id=47` (nowy krok 2FA), potem PerformLogin → Grant →
-      `synergia/loguj/portalSzkoly?code=…` → portal; ciasteczka SDZIENNIKSID/DZIENNIKSID są, ale **brak `oauth_token`**, wymiana kodu na portalu daje `invalid_client`.
-      Hipotezy do sprawdzenia: (1) wymagane zaufane urządzenie – zapamiętać `DeviceCookie` (371 zn.) między logowaniami i wysyłać go; (2) Librus pyta w przeglądarce o dodatkowe
-      potwierdzenie (kod/e-mail); (3) inna ścieżka SSO (portal → Synergia). Hipoteza o nagłówku `x-baner` (nowy skrypt strony logowania) – nie była przyczyną logowania.
-      Diagnostyka w aplikacji (v1.4.45) pokazuje kroki pod żółtym komunikatem; wyłączyć, gdy logowanie wróci.
+- [ ] Naprawione dla nauczyciela (start logowania od `synergia.librus.pl/loguj/portalSzkoly`, żeby był `state`/`oauth_state` i cookie `oauth_token`). **Uczeń**: start logowania zostawiony po staremu
+      (działa przez REST/gateway) – sprawdzić na koncie ucznia, czy po zmianie Librusa nadal działa; jeśli nie, zastosować ten sam start (`/loguj/portalRodzina`?).
+- [ ] Wyłączyć lub ograniczyć diagnostykę w żółtym komunikacie „Sesja wygasła” (v1.4.43–45), gdy sytuacja się uspokoi – zostawić krótką wersję.
 - [ ] Ryzyko ogólne: aplikacja korzysta z nieoficjalnych mechanizmów Librusa, więc każda zmiana zabezpieczeń je psuje – rozważyć kontakt z Librusem w sprawie oficjalnego dostępu.
+- [ ] Skrypt do śledzenia logowania w przeglądarce (Playwright + Edge, bez zapisu haseł) dobrze działa do porównań z aplikacją – dodać do `testy/` na przyszłe awarie.
 
 ### Zależności i licencje
 
